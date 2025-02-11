@@ -1,16 +1,17 @@
 package com.example.mutemate
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -25,30 +26,48 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
     private fun scheduleMuteTask(startTime: String, endTime: String) {
         val workManager = WorkManager.getInstance(context)
 
+        val muteDelay = calculateDelay(startTime)
+        val unmuteDelay = calculateDelay(endTime)
+
+        Log.d("MuteViewModel", "Mute delay: $muteDelay ms, Unmute delay: $unmuteDelay ms")
+
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
-            .setInitialDelay(parseTime(startTime), TimeUnit.MILLISECONDS)
+            .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
             .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
             .build()
 
-
         val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()
-            .setInitialDelay(parseTime(endTime), TimeUnit.MILLISECONDS)
+            .setInitialDelay(unmuteDelay, TimeUnit.MILLISECONDS)
             .build()
 
-        workManager.enqueue(muteRequest)
-        workManager.enqueue(unmuteRequest)
+        workManager.enqueueUniqueWork("MuteTask", ExistingWorkPolicy.REPLACE, muteRequest)
+        workManager.enqueueUniqueWork("UnmuteTask", ExistingWorkPolicy.REPLACE, unmuteRequest)
     }
 
-    private fun parseTime(time: String): Long {
+    private fun calculateDelay(time: String): Long {
         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
         val currentTime = Calendar.getInstance()
         val targetTime = Calendar.getInstance()
-        targetTime.time = sdf.parse(time) ?: Date()
 
-        if (targetTime.before(currentTime)) {
-            targetTime.add(Calendar.DAY_OF_MONTH, 1)
+        try {
+            val parsedTime = sdf.parse(time) ?: return 0L
+            targetTime.time = parsedTime
+
+            // Ensure target time is on the same day or the next day if it's already passed
+            targetTime.set(Calendar.YEAR, currentTime.get(Calendar.YEAR))
+            targetTime.set(Calendar.MONTH, currentTime.get(Calendar.MONTH))
+            targetTime.set(Calendar.DAY_OF_MONTH, currentTime.get(Calendar.DAY_OF_MONTH))
+
+            if (targetTime.before(currentTime)) {
+                targetTime.add(Calendar.DAY_OF_MONTH, 1)
+            }
+
+            val delay = targetTime.timeInMillis - currentTime.timeInMillis
+            Log.d("MuteViewModel", "Calculated delay for $time: $delay milliseconds")
+            return delay
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        return targetTime.timeInMillis - currentTime.timeInMillis
+        return 0L
     }
 }
