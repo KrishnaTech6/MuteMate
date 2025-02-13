@@ -19,22 +19,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun MuteScreen(viewModel: MuteViewModel, context: Context) {
+fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = Modifier) {
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
     val startPickerDialog = remember { mutableStateOf(false) }
     val endPickerDialog = remember { mutableStateOf(false) }
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
+    val showDialog = remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(24.dp)
@@ -62,12 +64,16 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context) {
         }
 
         if (customTimeSelected) {
+            selectedDuration.intValue = 0 // reset duration when custom time is selected
             val calendar = Calendar.getInstance()
             val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
             val currentMinute = calendar.get(Calendar.MINUTE)
 
             // Start Date & Time Picker
-            TimeSelector(label = "Start Time", time = startTime, onClick = { startPickerDialog.value = true })
+            TimeSelector(
+                label = "Start Time",
+                time = startTime,
+                onClick = { startPickerDialog.value = true })
             if (startPickerDialog.value) {
                 TimePickerDialog(context, { _, hour, minute ->
                     val selectedCalendar = Calendar.getInstance().apply {
@@ -79,45 +85,66 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context) {
                     if (selectedCalendar.timeInMillis >= calendar.timeInMillis) {
                         startTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
                     } else {
-                        Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT)
+                            .show()
                     }
-                    startPickerDialog.value = false
                 }, currentHour, currentMinute, true).show()
+                startPickerDialog.value = false
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // End Date & Time Picker
-            TimeSelector(label = "End Time", time = endTime, onClick = { endPickerDialog.value = true })
+            TimeSelector(
+                label = "End Time",
+                time = endTime,
+                onClick = { endPickerDialog.value = true })
             if (endPickerDialog.value) {
                 TimePickerDialog(context, { _, hour, minute ->
-                    val selectedEndCalendar = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, hour)
-                        set(Calendar.MINUTE, minute)
-                    }
-                    val startCalendar = Calendar.getInstance()
-                    val (startHour, startMinute) = startTime.split(":").map { it.toInt() }
-                    startCalendar.set(Calendar.HOUR_OF_DAY, startHour)
-                    startCalendar.set(Calendar.MINUTE, startMinute)
+                    if (startTime.isNotEmpty()) {
+                        val selectedEndCalendar = Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, hour)
+                            set(Calendar.MINUTE, minute)
+                        }
+                        val startCalendar = Calendar.getInstance()
+                        val (startHour, startMinute) = startTime.split(":").map { it.toInt() }
+                        startCalendar.set(Calendar.HOUR_OF_DAY, startHour)
+                        startCalendar.set(Calendar.MINUTE, startMinute)
 
-                    // Ensure end time is after start time
-                    if (selectedEndCalendar.timeInMillis > startCalendar.timeInMillis) {
-                        endTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-                    } else {
-                        Toast.makeText(context, "End time must be after start time", Toast.LENGTH_SHORT).show()
-                    }
-                    endPickerDialog.value = false
-                }, currentHour, currentMinute, true).show()
+                        // Ensure end time is after start time
+                        if (selectedEndCalendar.timeInMillis > startCalendar.timeInMillis) {
+                            endTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "End time must be after start time",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else
+                        Toast.makeText(
+                            context,
+                            "Please select start time first",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                }, currentHour, currentMinute, true)
+                    .show()
+                endPickerDialog.value = false
             }
         }
 
 
         Spacer(modifier = Modifier.height(30.dp))
+
         Button(
             onClick = {
                 if (!hasNotificationPolicyAccess(context)) {
-                    requestNotificationPolicyAccess(context)
-                } else {
+                    showDialog.value = true
+                } else if (selectedDuration.intValue == 0 && !customTimeSelected)
+                    Toast.makeText(context, "Please select duration", Toast.LENGTH_SHORT).show()
+                else if (endTime.isEmpty() && customTimeSelected)
+                    Toast.makeText(context, "Please select start and end time", Toast.LENGTH_SHORT).show()
+                else {
                     if (!customTimeSelected) {
                         val endCalendar = Calendar.getInstance().apply {
                             add(Calendar.MINUTE, selectedDuration.value)
@@ -127,6 +154,10 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context) {
                     }
                     viewModel.addSchedule(startTime, endTime)
                     Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
+                    //Reset Values
+                    endTime = ""
+                    startTime = ""
+                    customTimeSelected = false
                 }
             },
             shape = RoundedCornerShape(12.dp),
@@ -136,6 +167,34 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context) {
                 .height(50.dp)
         ) {
             Text("Save Schedule", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        }
+        if (showDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showDialog.value = false },
+                title = { Text("Enable Do Not Disturb Access") },
+                text = {
+                    Text(
+                        "To ensure uninterrupted quiet hours, please enable Do Not Disturb (DND) mode manually. " +
+                                "We can only guide you to the settings, but you must turn it on yourself.",
+                        textAlign = TextAlign.Justify
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            requestNotificationPolicyAccess(context)
+                            showDialog.value = false
+                        }
+                    ) {
+                        Text("Go to DND Settings")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog.value = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }
@@ -158,14 +217,22 @@ fun TimeSelector(label: String, time: String, onClick: () -> Unit) {
 @Composable
 fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) {
     val options = listOf(1, 5, 10, 15, 30, 60)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.horizontalScroll(rememberScrollState())) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.horizontalScroll(rememberScrollState())
+    ) {
         options.forEach { duration ->
             OutlinedButton(
                 onClick = { onDurationSelected(duration) },
                 shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray),
+                border = BorderStroke(
+                    1.dp,
+                    if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray
+                ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
+                    containerColor = if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(
+                        alpha = 0.2f
+                    ) else Color.Transparent,
                     contentColor = if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray
                 )
             ) {
@@ -176,7 +243,8 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
 }
 
 fun hasNotificationPolicyAccess(context: Context): Boolean {
-    val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     return notificationManager.isNotificationPolicyAccessGranted
 }
 
