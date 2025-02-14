@@ -1,14 +1,16 @@
 package com.example.mutemate
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -16,20 +18,39 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class MuteViewModel(private val dao: MuteScheduleDao, private val context: Context) : ViewModel() {
-    fun addSchedule(startTime: String, endTime: String) {
+    val allSchedules: Flow<List<MuteSchedule>> = dao.getSchedules()
+
+    fun addSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.insert(MuteSchedule(startTime = startTime, endTime = endTime))
-            scheduleMuteTask(startTime, endTime)
+            val scheduleList = allSchedules.firstOrNull()?: emptyList()
+            if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
+                return@launch
+            }
+            if(scheduleList.isNotEmpty() && scheduleList.first().startTime.isEmpty()) deleteSchedule(scheduleList.first())
+            val insertedId = dao.insert(schedule).toInt()
+            val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
+            scheduleMuteTask(updatedSchedule)
         }
     }
 
-    private fun scheduleMuteTask(startTime: String, endTime: String) {
+    fun deleteSchedule(schedule: MuteSchedule) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dao.delete(schedule)
+            cancelMuteTask(schedule)
+        }
+    }
+    private fun cancelMuteTask(schedule: MuteSchedule) {
+        val workManager = WorkManager.getInstance(context)
+        workManager.cancelUniqueWork("MuteTask_${schedule.id}")
+        MuteHelper(context).unmutePhone()
+        workManager.cancelUniqueWork("UnmuteTask_${schedule.id}")
+    }
+
+    private fun scheduleMuteTask(schedule: MuteSchedule) {
         val workManager = WorkManager.getInstance(context)
 
-        val muteDelay = calculateDelay(startTime)
-        val unmuteDelay = calculateDelay(endTime)
-
-        Log.d("MuteViewModel", "Mute delay: $muteDelay ms, Unmute delay: $unmuteDelay ms")
+        val muteDelay = calculateDelay(schedule.startTime)
+        val unmuteDelay = calculateDelay(schedule.endTime)
 
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
             .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
@@ -38,10 +59,12 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
 
         val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()
             .setInitialDelay(unmuteDelay, TimeUnit.MILLISECONDS)
+            .setInputData(workDataOf("schedule_id" to schedule.id))
             .build()
-
-        workManager.enqueueUniqueWork("MuteTask", ExistingWorkPolicy.REPLACE, muteRequest)
-        workManager.enqueueUniqueWork("UnmuteTask", ExistingWorkPolicy.REPLACE, unmuteRequest)
+        val muteTaskName = "MuteTask_${schedule.id}"
+        val unmuteTaskName = "UnmuteTask_${schedule.id}"
+        workManager.enqueueUniqueWork(muteTaskName, ExistingWorkPolicy.REPLACE, muteRequest)
+        workManager.enqueueUniqueWork(unmuteTaskName, ExistingWorkPolicy.REPLACE, unmuteRequest)
     }
 
     private fun calculateDelay(time: String): Long {
@@ -50,7 +73,7 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
         val targetTime = Calendar.getInstance()
 
         try {
-            val parsedTime = sdf.parse(time) ?: return 0L
+            val parsedTime = if (time.isEmpty()) return 0L else sdf.parse(time)
             targetTime.time = parsedTime
 
             // Ensure target time is on the same day or the next day if it's already passed
@@ -63,7 +86,6 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
             }
 
             val delay = targetTime.timeInMillis - currentTime.timeInMillis
-            Log.d("MuteViewModel", "Calculated delay for $time: $delay milliseconds")
             return delay
         } catch (e: Exception) {
             e.printStackTrace()

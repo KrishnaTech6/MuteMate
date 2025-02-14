@@ -12,7 +12,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,13 +33,13 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
+    val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "MuteMate", fontSize = 26.sp, fontWeight = FontWeight.Bold)
@@ -78,7 +77,7 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                 TimePickerDialog(context, { _, hour, minute ->
                     val selectedCalendar = Calendar.getInstance().apply {
                         set(Calendar.HOUR_OF_DAY, hour)
-                        set(Calendar.MINUTE, minute)
+                        set(Calendar.MINUTE , minute)
                     }
 
                     // Ensure selected time is not before current time
@@ -88,7 +87,7 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                         Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT)
                             .show()
                     }
-                }, currentHour, currentMinute, true).show()
+                }, currentHour, currentMinute+1, true).show()
                 startPickerDialog.value = false
             }
 
@@ -104,7 +103,7 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                     if (startTime.isNotEmpty()) {
                         val selectedEndCalendar = Calendar.getInstance().apply {
                             set(Calendar.HOUR_OF_DAY, hour)
-                            set(Calendar.MINUTE, minute)
+                            set(Calendar.MINUTE, minute+2)
                         }
                         val startCalendar = Calendar.getInstance()
                         val (startHour, startMinute) = startTime.split(":").map { it.toInt() }
@@ -127,7 +126,7 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                             "Please select start time first",
                             Toast.LENGTH_SHORT
                         ).show()
-                }, currentHour, currentMinute, true)
+                }, currentHour, currentMinute+2, true)
                     .show()
                 endPickerDialog.value = false
             }
@@ -143,7 +142,8 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                 } else if (selectedDuration.intValue == 0 && !customTimeSelected)
                     Toast.makeText(context, "Please select duration", Toast.LENGTH_SHORT).show()
                 else if (endTime.isEmpty() && customTimeSelected)
-                    Toast.makeText(context, "Please select start and end time", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Please select start and end time", Toast.LENGTH_SHORT)
+                        .show()
                 else {
                     if (!customTimeSelected) {
                         val endCalendar = Calendar.getInstance().apply {
@@ -152,7 +152,7 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                         endTime = sdf.format(endCalendar.time)
                     }
-                    viewModel.addSchedule(startTime, endTime)
+                    viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
                     Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
                     //Reset Values
                     endTime = ""
@@ -195,6 +195,11 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
                     }
                 }
             )
+        }
+
+        ScheduleList(schedule = schedules) {
+            viewModel.deleteSchedule(schedules[it])
+            Toast.makeText(context, "Schedule deleted", Toast.LENGTH_SHORT).show()
         }
     }
 }
