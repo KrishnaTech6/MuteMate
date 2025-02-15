@@ -32,7 +32,7 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
             if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
                 return@launch
             }
-            if(scheduleList.isNotEmpty() && scheduleList.first().startTime.isEmpty() && schedule.startTime.isEmpty())
+            if(scheduleList.isNotEmpty() && scheduleList.first().startTime == null && schedule.startTime==null)
                  deleteSchedule(scheduleList.first()) // delete the first item if its has empty start time as well as the new item has empty start time this means that new duration was chosen by the user
             val insertedId = dao.insert(schedule).toInt()
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID

@@ -1,5 +1,6 @@
 package com.example.mutemate
 
+import DateTimeSelector
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -22,16 +23,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
-import com.example.mutemate.utils.Constants
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Composable
 fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var startTime by remember { mutableStateOf("") }
-    var endTime by remember { mutableStateOf("") }
+    var startTime: Date? by remember { mutableStateOf(null) }
+    var endTime: Date? by remember { mutableStateOf(null) }
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
@@ -89,20 +88,19 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                     showDialog.value = true
                 } else if (selectedDuration.intValue == 0 && !customTimeSelected)
                     Toast.makeText(context, "Please select duration", Toast.LENGTH_SHORT).show()
-                else if (endTime.isEmpty() && customTimeSelected)
+                else if (endTime==null && customTimeSelected)
                     Toast.makeText(context, "Please select start and end time", Toast.LENGTH_SHORT)
                         .show()
                 else {
                     if (!customTimeSelected) {
                         val endMillis = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
-                        val sdf = SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.getDefault())
-                        endTime = sdf.format(Date(endMillis))
+                        endTime = Date(endMillis)
                     }
                     viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
                     Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
                     // Reset Values
-                    endTime = ""
-                    startTime = ""
+                    endTime = null
+                    startTime = null
                     customTimeSelected = false
                 }
             },

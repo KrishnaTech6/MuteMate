@@ -25,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
-import com.example.mutemate.utils.Constants
 import com.example.mutemate.utils.getTimeUntilStart
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -117,22 +117,19 @@ fun ScheduleText(schedule: MuteSchedule) {
     )
 }
 
-fun formatScheduleDuration(startTime: String, endTime: String): String {
+fun formatScheduleDuration(startTime: Date?, endTime: Date?): String {
     return try {
-        if (startTime.isEmpty()) return ""
-        val inputFormat = SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.getDefault())
+        if (startTime==null) return ""
         val outputFormat = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
-        val startDate = inputFormat.parse(startTime) ?: ""
-        val endDate = inputFormat.parse(endTime)?:""
 
-        val startFormatted = outputFormat.format(startDate)
-        val endFormatted = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(endDate)
+        val startFormatted = outputFormat.format(startTime)
+        val endFormatted = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(endTime!!)
 
-        val isSameDay = SimpleDateFormat("dd MMM", Locale.getDefault()).format(startDate) ==
-                SimpleDateFormat("dd MMM", Locale.getDefault()).format(endDate)
+        val isSameDay = SimpleDateFormat("dd MMM", Locale.getDefault()).format(startTime) ==
+                SimpleDateFormat("dd MMM", Locale.getDefault()).format(endTime)
 
         return if (isSameDay) "$startFormatted – $endFormatted"
-        else "$startFormatted – ${outputFormat.format(endDate)}"
+        else "$startFormatted – ${outputFormat.format(endTime)}"
     } catch (e: Exception) {
         Log.e("ScheduleDuration", "Error formatting schedule duration: ${e.message}")
         return ""
