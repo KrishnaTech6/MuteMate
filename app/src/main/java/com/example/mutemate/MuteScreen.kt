@@ -34,7 +34,6 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
     val startPickerDialog = remember { mutableStateOf(false) }
     val endPickerDialog = remember { mutableStateOf(false) }
     val selectedDuration = remember { mutableIntStateOf(0) }
-    val isCustomTime = remember { mutableStateOf(false) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
@@ -153,7 +152,7 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                 else {
                     if (!customTimeSelected) {
                         val endCalendar = Calendar.getInstance().apply {
-                            add(Calendar.MINUTE, selectedDuration.value)
+                            add(Calendar.MINUTE, selectedDuration.intValue)
                         }
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                         endTime = sdf.format(endCalendar.time)

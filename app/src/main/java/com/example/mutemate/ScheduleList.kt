@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -69,17 +68,29 @@ fun ScheduleItem(
 
 @Composable
 fun ScheduleText(schedule: MuteSchedule) {
-    var timeRemaining by remember { mutableStateOf(getTimeUntilStart(schedule.startTime)) }
+    var timeRemaining by remember(schedule.startTime) { mutableStateOf(getTimeUntilStart(schedule.startTime)) }
+    var text by remember(schedule.startTime) { mutableStateOf(formatTimeRemaining(timeRemaining)) }
 
     LaunchedEffect(schedule.startTime) {
-        while (timeRemaining.isNotEmpty()) {
+        while (timeRemaining > 0) {
+            text = formatTimeRemaining(timeRemaining)
+            delay(if (timeRemaining > 2*60) 60 * 1000 else 1000) // Adjust update frequency
             timeRemaining = getTimeUntilStart(schedule.startTime)
-            delay(1000)
         }
+        text = "Running"
     }
+
     Text(
-        text = timeRemaining,
-        style = MaterialTheme.typography.labelLarge
-            .copy(color = MaterialTheme.colorScheme.primary)
+        text = text,
+        style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary)
     )
+}
+
+fun formatTimeRemaining(timeRemaining: Int): String {
+    return when {
+        timeRemaining > 60 * 60 -> "Starts in ${timeRemaining / (60 * 60)}hr ${(timeRemaining / 60) % 60}min"
+        timeRemaining > 2*60 -> "Starts in ${timeRemaining / 60} min"
+        timeRemaining > 0 -> "Starts in ${timeRemaining / 60} min ${timeRemaining % 60} sec"
+        else -> "Running"
+    }
 }

@@ -15,15 +15,15 @@ fun convertToAmPm(time: String): String {
     return ""
 }
 
-fun getTimeUntilStart(startTime: String): String {
-    if (startTime.isEmpty()) return "Running"
+fun getTimeUntilStart(startTime: String): Int {
+    if (startTime.isEmpty()) return 0
 
     val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val now = Calendar.getInstance()
     val start = Calendar.getInstance()
 
     try {
-        val parsedTime = dateFormat.parse(startTime) ?: return ""
+        val parsedTime = dateFormat.parse(startTime) ?: return -1
 
         // Apply parsed hour and minute to today's date
         start.apply {
@@ -33,16 +33,11 @@ fun getTimeUntilStart(startTime: String): String {
             set(Calendar.MILLISECOND, 0)
         }
 
-        val diffInMinutes = ((start.timeInMillis - now.timeInMillis) / 1000).toInt()
-
-        return when {
-            diffInMinutes > 60*60 -> "Starts in ${diffInMinutes / 60*60}hr ${diffInMinutes % 60*60}min"
-            diffInMinutes > 0 -> "Starts in ${diffInMinutes / 60}min ${diffInMinutes % 60} sec"
-            else -> "Running"
-        }
+        val diffInInSec = ((start.timeInMillis - now.timeInMillis) / 1000).toInt()
+        return diffInInSec
     } catch (e: Exception) {
         Log.e("getTimeUntilStart", "Error parsing time: ${e.message}")
-        return ""
+        return -1
     }
 }
 
