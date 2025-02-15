@@ -1,7 +1,6 @@
 package com.example.mutemate
 
 import android.app.NotificationManager
-import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -23,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.Constants
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,8 +31,6 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
-    val startPickerDialog = remember { mutableStateOf(false) }
-    val endPickerDialog = remember { mutableStateOf(false) }
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
@@ -69,72 +67,16 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
 
         if (customTimeSelected) {
             selectedDuration.intValue = 0 // reset duration when custom time is selected
-            val calendar = Calendar.getInstance()
-            val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
-            val currentMinute = calendar.get(Calendar.MINUTE)
-
-            // Start Date & Time Picker
-            TimeSelector(
-                label = "Start Time",
-                time = startTime,
-                onClick = { startPickerDialog.value = true })
-            if (startPickerDialog.value) {
-                TimePickerDialog(context, { _, hour, minute ->
-                    val selectedCalendar = Calendar.getInstance().apply {
-                        set(Calendar.HOUR_OF_DAY, hour)
-                        set(Calendar.MINUTE , minute)
-                    }
-
-                    // Ensure selected time is not before current time
-                    if (selectedCalendar.timeInMillis >= calendar.timeInMillis) {
-                        startTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-                    } else {
-                        Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                }, currentHour, currentMinute+1, true).show()
-                startPickerDialog.value = false
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // End Date & Time Picker
-            TimeSelector(
-                label = "End Time",
-                time = endTime,
-                onClick = { endPickerDialog.value = true })
-            if (endPickerDialog.value) {
-                TimePickerDialog(context, { _, hour, minute ->
-                    if (startTime.isNotEmpty()) {
-                        val selectedEndCalendar = Calendar.getInstance().apply {
-                            set(Calendar.HOUR_OF_DAY, hour)
-                            set(Calendar.MINUTE, minute+2)
-                        }
-                        val startCalendar = Calendar.getInstance()
-                        val (startHour, startMinute) = startTime.split(":").map { it.toInt() }
-                        startCalendar.set(Calendar.HOUR_OF_DAY, startHour)
-                        startCalendar.set(Calendar.MINUTE, startMinute)
-
-                        // Ensure end time is after start time
-                        if (selectedEndCalendar.timeInMillis > startCalendar.timeInMillis) {
-                            endTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-                        } else {
-                            Toast.makeText(
-                                context,
-                                "End time must be after start time",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } else
-                        Toast.makeText(
-                            context,
-                            "Please select start time first",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                }, currentHour, currentMinute+2, true)
-                    .show()
-                endPickerDialog.value = false
-            }
+            DateTimeSelector(
+                label = "Start Date and Time",
+                dateTime = startTime,
+                onDateTimeSelected = { startTime = it }
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            DateTimeSelector(
+                label = "End Date and Time",
+                dateTime = endTime,
+                onDateTimeSelected = { endTime = it })
         }
 
 
@@ -154,12 +96,12 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                         val endCalendar = Calendar.getInstance().apply {
                             add(Calendar.MINUTE, selectedDuration.intValue)
                         }
-                        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+                        val sdf = SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.getDefault())
                         endTime = sdf.format(endCalendar.time)
                     }
                     viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
                     Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
-                    //Reset Values
+                    // Reset Values
                     endTime = ""
                     startTime = ""
                     customTimeSelected = false
@@ -206,21 +148,6 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
             viewModel.deleteSchedule(schedules[it])
             Toast.makeText(context, "Schedule deleted", Toast.LENGTH_SHORT).show()
         }
-    }
-}
-
-@Composable
-fun TimeSelector(label: String, time: String, onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-    ) {
-        Text(text = if (time.isNotEmpty()) time else label)
     }
 }
 

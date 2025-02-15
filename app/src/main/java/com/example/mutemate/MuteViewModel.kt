@@ -1,6 +1,7 @@
 package com.example.mutemate
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
@@ -25,12 +26,14 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
 
     fun addSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
+            Log.d("MuteViewModel", "Adding schedule: $schedule")
+
             val scheduleList = allSchedules.firstOrNull()?: emptyList()
             if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
                 return@launch
             }
             if(scheduleList.isNotEmpty() && scheduleList.first().startTime.isEmpty() && schedule.startTime.isEmpty())
-                deleteSchedule(scheduleList.first()) // delete the first item if its has empty start time as well as the new item has empty start time this means that new duration was chosen by the user
+                 deleteSchedule(scheduleList.first()) // delete the first item if its has empty start time as well as the new item has empty start time this means that new duration was chosen by the user
             val insertedId = dao.insert(schedule).toInt()
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
             scheduleMuteTask(updatedSchedule)
@@ -58,6 +61,7 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
 
         val muteDelay = calculateDelay(schedule.startTime)
         val unmuteDelay = calculateDelay(schedule.endTime)
+        Log.d("MuteViewModel", "muteDelay: $muteDelay, unmuteDelay: $unmuteDelay")
 
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
             .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
