@@ -1,10 +1,11 @@
-package com.example.mutemate
+package com.example.mutemate.room
 
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.mutemate.model.MuteSchedule
 import kotlinx.coroutines.flow.Flow
 
 @Dao

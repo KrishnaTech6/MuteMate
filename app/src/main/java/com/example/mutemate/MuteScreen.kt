@@ -17,20 +17,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mutemate.model.MuteSchedule
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = Modifier) {
+fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     var startTime by remember { mutableStateOf("") }
     var endTime by remember { mutableStateOf("") }
     val startPickerDialog = remember { mutableStateOf(false) }
     val endPickerDialog = remember { mutableStateOf(false) }
     val selectedDuration = remember { mutableIntStateOf(0) }
+    val isCustomTime = remember { mutableStateOf(false) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
@@ -49,9 +53,11 @@ fun MuteScreen(viewModel: MuteViewModel, context: Context, modifier: Modifier = 
         if (!customTimeSelected) {
             Text(text = "Schedule mute for", fontSize = 18.sp, fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(10.dp))
-            DurationSelection(selectedDuration.intValue) { duration ->
-                selectedDuration.intValue = duration
-            }
+            DurationSelection(
+                selectedDuration.intValue,
+                onDurationSelected = { selectedDuration.intValue = it },
+                onNewDurationAdd = {5},
+            )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "or select custom time", fontSize = 16.sp, fontWeight = FontWeight.Medium)
@@ -220,8 +226,8 @@ fun TimeSelector(label: String, time: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) {
-    val options = listOf(1, 5, 10, 15, 30, 60)
+fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit, onNewDurationAdd: () -> Int) {
+    var options by remember { mutableStateOf(listOf(1, 5, 10, 15, 30, 60)) }
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.horizontalScroll(rememberScrollState())
@@ -244,6 +250,13 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                 Text(text = "$duration min")
             }
         }
+//        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier
+//            .padding(end = 8.dp)
+//            .align(Alignment.CenterVertically)
+//            .clickable {
+//                val newDuration = onNewDurationAdd()
+//                options = (options + newDuration)
+//            }, tint = Color.Gray)
     }
 }
 

@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.utils
 
 import android.content.Context
 import android.media.AudioManager

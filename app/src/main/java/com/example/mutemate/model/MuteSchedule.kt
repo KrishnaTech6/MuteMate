@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

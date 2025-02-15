@@ -12,10 +12,17 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.convertToAmPm
+import com.example.mutemate.utils.getTimeUntilStart
+import kotlinx.coroutines.delay
 
 @Composable
 fun ScheduleList(schedule: List<MuteSchedule>, onRemove: (Int) -> Unit) {
@@ -31,7 +38,7 @@ fun ScheduleList(schedule: List<MuteSchedule>, onRemove: (Int) -> Unit) {
 
 @Composable
 fun ScheduleItem(
-    index: Int ,
+    index: Int,
     schedule: MuteSchedule,
     onRemove: (Int) -> Unit
 ) {
@@ -48,13 +55,31 @@ fun ScheduleItem(
                 style = MaterialTheme.typography.titleSmall
             )
             Text(
-                text = schedule.startTime + " to " + schedule.endTime,
+                text = "${convertToAmPm(schedule.startTime)} to ${convertToAmPm(schedule.endTime)}",
                 style = MaterialTheme.typography.bodySmall
             )
         }
+        ScheduleText(schedule)
         Icon(Icons.Default.Remove, contentDescription = null, modifier = Modifier.clickable{
             //remove
             onRemove(index)
         })
     }
+}
+
+@Composable
+fun ScheduleText(schedule: MuteSchedule) {
+    var timeRemaining by remember { mutableStateOf(getTimeUntilStart(schedule.startTime)) }
+
+    LaunchedEffect(schedule.startTime) {
+        while (timeRemaining.isNotEmpty()) {
+            timeRemaining = getTimeUntilStart(schedule.startTime)
+            delay(1000)
+        }
+    }
+    Text(
+        text = timeRemaining,
+        style = MaterialTheme.typography.labelLarge
+            .copy(color = MaterialTheme.colorScheme.primary)
+    )
 }

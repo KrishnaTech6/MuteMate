@@ -1,23 +1,26 @@
 package com.example.mutemate
 
-import android.content.Context
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.room.MuteScheduleDao
+import com.example.mutemate.utils.MuteHelper
+import com.example.mutemate.utils.calculateDelay
+import com.example.mutemate.worker.MuteWorker
+import com.example.mutemate.worker.UnmuteWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-class MuteViewModel(private val dao: MuteScheduleDao, private val context: Context) : ViewModel() {
+class MuteViewModel(private val dao: MuteScheduleDao,application: Application) : AndroidViewModel(application) {
     val allSchedules: Flow<List<MuteSchedule>> = dao.getSchedules()
 
     fun addSchedule(schedule: MuteSchedule) {
@@ -26,7 +29,8 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
             if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
                 return@launch
             }
-            if(scheduleList.isNotEmpty() && scheduleList.first().startTime.isEmpty()) deleteSchedule(scheduleList.first())
+            if(scheduleList.isNotEmpty() && scheduleList.first().startTime.isEmpty() && schedule.startTime.isEmpty())
+                deleteSchedule(scheduleList.first()) // delete the first item if its has empty start time as well as the new item has empty start time this means that new duration was chosen by the user
             val insertedId = dao.insert(schedule).toInt()
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
             scheduleMuteTask(updatedSchedule)
@@ -39,7 +43,9 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
             cancelMuteTask(schedule)
         }
     }
+
     private fun cancelMuteTask(schedule: MuteSchedule) {
+        val context = getApplication<Application>().applicationContext
         val workManager = WorkManager.getInstance(context)
         workManager.cancelUniqueWork("MuteTask_${schedule.id}")
         MuteHelper(context).unmutePhone()
@@ -47,6 +53,7 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
     }
 
     private fun scheduleMuteTask(schedule: MuteSchedule) {
+        val context = getApplication<Application>().applicationContext
         val workManager = WorkManager.getInstance(context)
 
         val muteDelay = calculateDelay(schedule.startTime)
@@ -65,31 +72,5 @@ class MuteViewModel(private val dao: MuteScheduleDao, private val context: Conte
         val unmuteTaskName = "UnmuteTask_${schedule.id}"
         workManager.enqueueUniqueWork(muteTaskName, ExistingWorkPolicy.REPLACE, muteRequest)
         workManager.enqueueUniqueWork(unmuteTaskName, ExistingWorkPolicy.REPLACE, unmuteRequest)
-    }
-
-    private fun calculateDelay(time: String): Long {
-        val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val currentTime = Calendar.getInstance()
-        val targetTime = Calendar.getInstance()
-
-        try {
-            val parsedTime = if (time.isEmpty()) return 0L else sdf.parse(time)
-            targetTime.time = parsedTime
-
-            // Ensure target time is on the same day or the next day if it's already passed
-            targetTime.set(Calendar.YEAR, currentTime.get(Calendar.YEAR))
-            targetTime.set(Calendar.MONTH, currentTime.get(Calendar.MONTH))
-            targetTime.set(Calendar.DAY_OF_MONTH, currentTime.get(Calendar.DAY_OF_MONTH))
-
-            if (targetTime.before(currentTime)) {
-                targetTime.add(Calendar.DAY_OF_MONTH, 1)
-            }
-
-            val delay = targetTime.timeInMillis - currentTime.timeInMillis
-            return delay
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return 0L
     }
 }
