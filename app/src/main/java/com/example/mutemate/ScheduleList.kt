@@ -1,5 +1,6 @@
 package com.example.mutemate
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.Constants
 import com.example.mutemate.utils.getTimeUntilStart
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -52,7 +54,9 @@ fun ScheduleItem(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
@@ -60,22 +64,37 @@ fun ScheduleItem(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Schedule ${index + 1}",
-                style = MaterialTheme.typography.titleSmall
-            )
+            Row {
+                Text(
+                    text = "Schedule ${index + 1}",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(Modifier.width(8.dp))
+                ScheduleText(schedule)
+            }
+            var timeRemaining by remember(schedule.endTime) { mutableStateOf(getTimeUntilStart(schedule.endTime)) }
+            var text by remember(schedule.endTime) { mutableStateOf(formatTimeRemaining(timeRemaining, isEnd= true)) }
+
+            LaunchedEffect(schedule.endTime) {
+                while (timeRemaining > 0) {
+                    text = formatTimeRemaining(timeRemaining, isEnd = true)
+                    delay(if (timeRemaining > 2*60) 60 * 1000 else 1000) // Adjust update frequency
+                    timeRemaining = getTimeUntilStart(schedule.endTime)
+                }
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.Schedule, contentDescription = "Time", modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = formattedScheduleTime,
+                    text = if(formattedScheduleTime.isEmpty()) text else formattedScheduleTime,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     maxLines = 1
                 )
             }
         }
-        ScheduleText(schedule)
-        Icon(Icons.Default.Remove, contentDescription = "Remove", modifier = Modifier.padding(4.dp).clickable { onRemove(index) })
+        Icon(Icons.Default.Remove, contentDescription = "Remove", modifier = Modifier
+            .padding(4.dp)
+            .clickable { onRemove(index) })
     }
 }
 
@@ -87,12 +106,11 @@ fun ScheduleText(schedule: MuteSchedule) {
     LaunchedEffect(schedule.startTime) {
         while (timeRemaining > 0) {
             text = formatTimeRemaining(timeRemaining)
-            delay(if (timeRemaining > 2*60) 60 * 1000 else 1000) // Adjust update frequency
+            delay(if (timeRemaining > 2 * 60) 60 * 1000 else 1000) // Adjust update frequency
             timeRemaining = getTimeUntilStart(schedule.startTime)
         }
         text = "Running"
     }
-
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary)
@@ -101,13 +119,11 @@ fun ScheduleText(schedule: MuteSchedule) {
 
 fun formatScheduleDuration(startTime: String, endTime: String): String {
     return try {
-        val inputFormat = SimpleDateFormat("dd MMM yyyy hh:mm a", Locale.getDefault())
+        if (startTime.isEmpty()) return ""
+        val inputFormat = SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.getDefault())
         val outputFormat = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
-
-        val startDate = inputFormat.parse(startTime)
-        val endDate = inputFormat.parse(endTime)
-
-        if (startDate == null || endDate == null) return "Ongoing"
+        val startDate = inputFormat.parse(startTime) ?: ""
+        val endDate = inputFormat.parse(endTime)?:""
 
         val startFormatted = outputFormat.format(startDate)
         val endFormatted = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(endDate)
@@ -118,15 +134,19 @@ fun formatScheduleDuration(startTime: String, endTime: String): String {
         return if (isSameDay) "$startFormatted – $endFormatted"
         else "$startFormatted – ${outputFormat.format(endDate)}"
     } catch (e: Exception) {
-        "Ongoing"
+        Log.e("ScheduleDuration", "Error formatting schedule duration: ${e.message}")
+        return ""
     }
 }
 
-fun formatTimeRemaining(timeRemaining: Int): String {
+fun formatTimeRemaining(timeRemaining: Int, isEnd: Boolean= false ): String {
+    val endOrStart= if(!isEnd) "Starts" else "Ends"
     return when {
-        timeRemaining > 60*60 -> "Starts in ${timeRemaining / (60 * 60)}hr ${(timeRemaining / 60) % 60}min"
-        timeRemaining > 2*60 -> "Starts in ${timeRemaining / 60} min"
-        timeRemaining > 0 -> "Starts in ${timeRemaining / 60} min ${timeRemaining % 60} sec"
+        timeRemaining >= 3600 -> "$endOrStart in ${timeRemaining / 3600}h ${timeRemaining % 3600 / 60}m".trimEnd()
+        timeRemaining >= 120 -> "$endOrStart in ${timeRemaining / 60}m"
+        timeRemaining >= 60 -> "$endOrStart in 1m"
+        timeRemaining > 0 -> "$endOrStart in ${timeRemaining}s"
         else -> "Running"
     }
 }
+

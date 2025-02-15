@@ -25,6 +25,7 @@ import com.example.mutemate.model.MuteSchedule
 import com.example.mutemate.utils.Constants
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
@@ -76,9 +77,9 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
             DateTimeSelector(
                 label = "End Date and Time",
                 dateTime = endTime,
+                minDateTime = startTime,
                 onDateTimeSelected = { endTime = it })
         }
-
 
         Spacer(modifier = Modifier.height(30.dp))
 
@@ -93,11 +94,9 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                         .show()
                 else {
                     if (!customTimeSelected) {
-                        val endCalendar = Calendar.getInstance().apply {
-                            add(Calendar.MINUTE, selectedDuration.intValue)
-                        }
+                        val endMillis = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
                         val sdf = SimpleDateFormat(Constants.DATE_TIME_FORMAT, Locale.getDefault())
-                        endTime = sdf.format(endCalendar.time)
+                        endTime = sdf.format(Date(endMillis))
                     }
                     viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
                     Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
@@ -113,7 +112,7 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text("Save Schedule", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Set Mute Schedule", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         if (showDialog.value) {
             AlertDialog(

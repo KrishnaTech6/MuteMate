@@ -22,7 +22,12 @@ import java.util.Calendar
 import java.util.Locale
 
 @Composable
-fun DateTimeSelector(label: String, dateTime: String, minDateTime: String? = null,onDateTimeSelected: (String) -> Unit) {
+fun DateTimeSelector(
+    label: String,
+    dateTime: String,
+    minDateTime: String? = null, // The minimum date-time allowed (used for End Time validation)
+    onDateTimeSelected: (String) -> Unit
+) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
 
@@ -47,21 +52,21 @@ fun DateTimeSelector(label: String, dateTime: String, minDateTime: String? = nul
         val picker = DatePickerDialog(
             context,
             { _, year, month, dayOfMonth ->
-                val selectedCalendar = Calendar.getInstance()
-                selectedCalendar.set(year, month, dayOfMonth)
+                selectedCalendar.value.set(year, month, dayOfMonth)
+
                 val sdf = SimpleDateFormat("MMM", Locale.getDefault()) // "MMM" gives short month name (e.g., "Jan")
-                val monthWord = sdf.format(selectedCalendar.time) // Now format the correct month
-                selectedDate.value =
-                    String.format(Locale.getDefault(), "%d %s %d", dayOfMonth, monthWord, year)
+                val monthWord = sdf.format(selectedCalendar.value.time)
+
+                selectedDate.value = String.format(Locale.getDefault(), "%d %s %d", dayOfMonth, monthWord, year)
                 timePickerDialog.value = true // Open Time Picker next
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
-        picker.datePicker.minDate = calendar.timeInMillis
-        picker.show()
 
+        picker.datePicker.minDate = calendar.timeInMillis // Prevent past dates
+        picker.show()
         datePickerDialog.value = false
     }
 
@@ -69,23 +74,43 @@ fun DateTimeSelector(label: String, dateTime: String, minDateTime: String? = nul
         val isToday = selectedCalendar.value.get(Calendar.YEAR) == calendar.get(Calendar.YEAR) &&
                 selectedCalendar.value.get(Calendar.MONTH) == calendar.get(Calendar.MONTH) &&
                 selectedCalendar.value.get(Calendar.DAY_OF_MONTH) == calendar.get(Calendar.DAY_OF_MONTH)
+
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(Calendar.MINUTE)
 
         TimePickerDialog(
             context,
             { _, hour, minute ->
-                if (isToday && (hour < currentHour || (hour == currentHour && minute < currentMinute))) {
-                    Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT).show()
-                } else {
-                    val amPm = if (hour >= 12) "PM" else "AM"
-                    val hour12 = if (hour % 12 == 0) 12 else hour % 12
+                val selectedTimestamp = selectedCalendar.value.apply {
+                    set(Calendar.HOUR_OF_DAY, hour)
+                    set(Calendar.MINUTE, minute)
+                }.timeInMillis
 
-                    val fullDateTime = "${selectedDate.value} ${String.format(Locale.getDefault(), "%d:%02d %s", hour12, minute, amPm)}"
-                    onDateTimeSelected(fullDateTime)
+                // ✅ Prevent selecting past times for today
+                if (isToday && selectedTimestamp < System.currentTimeMillis()) {
+                    Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    return@TimePickerDialog
                 }
+
+                // ✅ Prevent selecting an End Time before Start Time
+                minDateTime?.let {
+                    val sdf = SimpleDateFormat("d MMM yyyy h:mm a", Locale.getDefault())
+                    val minDateCalendar = Calendar.getInstance()
+                    minDateCalendar.time = sdf.parse(it)!!
+
+                    if (selectedTimestamp <= minDateCalendar.timeInMillis) {
+                        Toast.makeText(context, "End time must be after start time!", Toast.LENGTH_SHORT).show()
+                        return@TimePickerDialog
+                    }
+                }
+
+                val amPm = if (hour >= 12) "PM" else "AM"
+                val hour12 = if (hour % 12 == 0) 12 else hour % 12
+
+                val fullDateTime = "${selectedDate.value} ${String.format(Locale.getDefault(), "%d:%02d %s", hour12, minute, amPm)}"
+                onDateTimeSelected(fullDateTime)
             },
-            if (isToday) currentHour else 0, // Prevent past times for today
+            if (isToday) currentHour else 0,
             if (isToday) currentMinute else 0,
             false
         ).show()
