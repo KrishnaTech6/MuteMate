@@ -69,4 +69,5 @@ dependencies {
     implementation ("androidx.work:work-runtime-ktx:$work_version")
 
     implementation( "androidx.compose.material:material-icons-extended")
+    implementation("com.google.code.gson:gson:2.12.1")
 }

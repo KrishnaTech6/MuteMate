@@ -5,23 +5,32 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.SharedPrefUtils
 import com.example.mutemate.utils.getTimeUntilStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -67,7 +76,6 @@ fun MuteScreen(
             DurationSelection(
                 selectedDuration.intValue,
                 onDurationSelected = { selectedDuration.intValue = it },
-                onNewDurationAdd = {5},
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -171,38 +179,122 @@ fun ShowDndAlert(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit, onNewDurationAdd: () -> Int) {
-    var options by remember { mutableStateOf(listOf(1, 5, 10, 15, 30, 60)) }
+fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) {
+    val context = LocalContext.current
+    var showDialog by remember { mutableStateOf(false ) }
+    var options by remember {
+        mutableStateOf(SharedPrefUtils.getList(context).takeIf { !it.isNullOrEmpty() } ?: listOf(1, 5, 10, 15))}
+    var newDurationText by remember { mutableStateOf("") }
+    LaunchedEffect(options) {
+        SharedPrefUtils.saveList(context, options)
+    }
+
+    var showRemoveDialog by remember { mutableStateOf(false) }
+    var durationToRemove by remember { mutableStateOf<Int?>(null) }
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.horizontalScroll(rememberScrollState())
     ) {
         options.forEach { duration ->
-            OutlinedButton(
-                onClick = { onDurationSelected(duration) },
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(
-                    1.dp,
-                    if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray
-                ),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.2f
-                    ) else Color.Transparent,
-                    contentColor = if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray
-                )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(
+                        width = 1.dp,
+                        color = if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .background(
+                        if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        else Color.Transparent
+                    )
+                    .combinedClickable(
+                        onClick = {onDurationSelected(duration)},
+                        onLongClick = {
+                            durationToRemove = duration
+                            showRemoveDialog = true
+                        }
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text(text = "$duration min")
+                Text(text = "$duration min",
+                    color = if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium)
             }
         }
-//        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier
-//            .padding(end = 8.dp)
-//            .align(Alignment.CenterVertically)
-//            .clickable {
-//                val newDuration = onNewDurationAdd()
-//                options = (options + newDuration)
-//            }, tint = Color.Gray)
+        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier
+            .padding(end = 8.dp)
+            .align(Alignment.CenterVertically)
+            .clickable {
+                showDialog = true
+            }, tint = Color.Gray)
+    }
+
+    // Custom Duration Input Dialog
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Add Custom Duration") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = newDurationText,
+                        onValueChange = { newDurationText = it },
+                        label = { Text("Enter duration (minutes)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val newDuration = newDurationText.toIntOrNull()
+                        if (newDuration != null && newDuration > 0 && newDuration !in options) {
+                            options = (options + newDuration).sorted()
+                            newDurationText = ""
+                            showDialog = false
+                        }
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showRemoveDialog) {
+        AlertDialog(
+            onDismissRequest = { showRemoveDialog = false },
+            title = { Text("Remove Duration?") },
+            text = { Text("Are you sure you want to remove $durationToRemove min?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        durationToRemove?.let {
+                            options = options.filter { it != durationToRemove }
+                            SharedPrefUtils.saveList(context, options)
+                        }
+                        showRemoveDialog = false
+                    }
+                ) {
+                    Text("Remove")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRemoveDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
