@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -23,11 +22,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.getTimeUntilStart
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 @Composable
-fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
+fun MuteScreen(
+    snackbarHostState: SnackbarHostState,
+    coroutineScope: CoroutineScope,
+    viewModel: MuteViewModel,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     var startTime: Date? by remember { mutableStateOf(null) }
     var endTime: Date? by remember { mutableStateOf(null) }
@@ -35,6 +42,13 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
     var customTimeSelected by remember { mutableStateOf(false) }
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
+    val formattedScheduleTime by remember(schedules) {mutableStateOf(schedules.sortedBy { getTimeUntilStart(it.startTime) })}
+
+    fun showToast(msg: String) {
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
 
     Column(
         modifier = modifier
@@ -68,16 +82,20 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
         if (customTimeSelected) {
             selectedDuration.intValue = 0 // reset duration when custom time is selected
             DateTimeSelector(
+                coroutineScope,
+                snackbarHostState,
                 label = "Start Date and Time",
                 dateTime = startTime,
                 onDateTimeSelected = { startTime = it }
             )
             Spacer(modifier = Modifier.height(10.dp))
             DateTimeSelector(
+                coroutineScope = coroutineScope,
+                snackbarHostState= snackbarHostState,
                 label = "End Date and Time",
                 dateTime = endTime,
-                minDateTime = startTime,
-                onDateTimeSelected = { endTime = it })
+                minDateTime = startTime
+            ) { endTime = it }
         }
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -87,21 +105,19 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
                 if (!hasNotificationPolicyAccess(context)) {
                     showDialog.value = true
                 } else if (selectedDuration.intValue == 0 && !customTimeSelected)
-                    Toast.makeText(context, "Please select duration", Toast.LENGTH_SHORT).show()
+                    showToast("Please select duration")
                 else if (endTime==null && customTimeSelected)
-                    Toast.makeText(context, "Please select start and end time", Toast.LENGTH_SHORT)
-                        .show()
+                    showToast("Please select start and end time")
                 else {
                     if (!customTimeSelected) {
                         val endMillis = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
                         endTime = Date(endMillis)
                     }
                     viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
-                    Toast.makeText(context, "Schedule added", Toast.LENGTH_SHORT).show()
+                    showToast("Schedule added")
                     // Reset Values
                     endTime = null
                     startTime = null
-                    customTimeSelected = false
                 }
             },
             shape = RoundedCornerShape(12.dp),
@@ -113,39 +129,46 @@ fun MuteScreen(viewModel: MuteViewModel, modifier: Modifier = Modifier) {
             Text("Set Mute Schedule", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
         if (showDialog.value) {
-            AlertDialog(
-                onDismissRequest = { showDialog.value = false },
-                title = { Text("Enable Do Not Disturb Access") },
-                text = {
-                    Text(
-                        "To ensure uninterrupted quiet hours, please enable Do Not Disturb (DND) mode manually. " +
-                                "We can only guide you to the settings, but you must turn it on yourself.",
-                        textAlign = TextAlign.Justify
-                    )
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            requestNotificationPolicyAccess(context)
-                            showDialog.value = false
-                        }
-                    ) {
-                        Text("Go to DND Settings")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDialog.value = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
+            ShowDndAlert(showDialog, context)
         }
-
-        ScheduleList(schedule = schedules) {
-            viewModel.deleteSchedule(schedules[it])
-            Toast.makeText(context, "Schedule deleted", Toast.LENGTH_SHORT).show()
+        ScheduleList(schedule = formattedScheduleTime) {
+            viewModel.deleteSchedule(formattedScheduleTime[it])
+            showToast("Schedule deleted")
         }
     }
+}
+
+@Composable
+fun ShowDndAlert(
+    showDialog: MutableState<Boolean>,
+    context: Context,
+) {
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        title = { Text("Enable Do Not Disturb Access") },
+        text = {
+            Text(
+                "To ensure uninterrupted quiet hours, please enable Do Not Disturb (DND) mode manually. " +
+                        "We can only guide you to the settings, but you must turn it on yourself.",
+                textAlign = TextAlign.Justify
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    requestNotificationPolicyAccess(context)
+                    showDialog.value = false
+                }
+            ) {
+                Text("Go to DND Settings")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { showDialog.value = false }) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

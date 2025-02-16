@@ -7,6 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.example.mutemate.room.DatabaseProvider
 import com.example.mutemate.ui.theme.MuteMateTheme
@@ -20,8 +23,10 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             MuteMateTheme {
-                Scaffold { padding ->
-                    MuteScreen(viewModel, modifier = Modifier.padding(padding))
+                val snackbarHostState = remember { SnackbarHostState() } // Create SnackbarHostState
+                val coroutineScope = rememberCoroutineScope()
+                Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+                    MuteScreen(snackbarHostState,coroutineScope, viewModel, modifier = Modifier.padding(padding))
                 }
             }
         }

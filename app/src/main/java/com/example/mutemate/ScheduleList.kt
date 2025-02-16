@@ -1,8 +1,10 @@
 package com.example.mutemate
 
 import android.util.Log
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Schedule
@@ -22,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
@@ -53,48 +57,73 @@ fun ScheduleItem(
         formatScheduleDuration(schedule.startTime, schedule.endTime)
     }
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(vertical = 8.dp)
+            .border(1.dp, Color.Black.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+            .padding(8.dp)
     ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.Start
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row {
-                Text(
-                    text = "Schedule ${index + 1}",
-                    style = MaterialTheme.typography.titleSmall
-                )
-                Spacer(Modifier.width(8.dp))
-                ScheduleText(schedule)
-            }
-            var timeRemaining by remember(schedule.endTime) { mutableStateOf(getTimeUntilStart(schedule.endTime)) }
-            var text by remember(schedule.endTime) { mutableStateOf(formatTimeRemaining(timeRemaining, isEnd= true)) }
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.Start
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically){
+                    Text(
+                        text = "Schedule ${schedule.id}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    ScheduleText(schedule)
+                }
+                var timeRemaining by remember(schedule.endTime) {
+                    mutableStateOf(
+                        getTimeUntilStart(
+                            schedule.endTime
+                        )
+                    )
+                }
+                var text by remember(schedule.endTime) {
+                    mutableStateOf(
+                        formatTimeRemaining(
+                            timeRemaining,
+                            isEnd = true
+                        )
+                    )
+                }
 
-            LaunchedEffect(schedule.endTime) {
-                while (timeRemaining > 0) {
-                    text = formatTimeRemaining(timeRemaining, isEnd = true)
-                    delay(if (timeRemaining > 2*60) 60 * 1000 else 1000) // Adjust update frequency
-                    timeRemaining = getTimeUntilStart(schedule.endTime)
+                LaunchedEffect(schedule.endTime) {
+                    while (timeRemaining > 0) {
+                        text = formatTimeRemaining(timeRemaining, isEnd = true)
+                        delay(if (timeRemaining > 2 * 60) 60 * 1000 else 1000) // Adjust update frequency
+                        timeRemaining = getTimeUntilStart(schedule.endTime)
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Schedule,
+                        contentDescription = "Time",
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (formattedScheduleTime.isEmpty()) text else formattedScheduleTime,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        maxLines = 1
+                    )
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Schedule, contentDescription = "Time", modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = if(formattedScheduleTime.isEmpty()) text else formattedScheduleTime,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                    maxLines = 1
-                )
-            }
+            Icon(Icons.Default.Remove, contentDescription = "Remove", modifier = Modifier
+                .padding(4.dp)
+                .clickable { onRemove(index) })
         }
-        Icon(Icons.Default.Remove, contentDescription = "Remove", modifier = Modifier
-            .padding(4.dp)
-            .clickable { onRemove(index) })
     }
 }
 
@@ -141,7 +170,7 @@ fun formatTimeRemaining(timeRemaining: Int, isEnd: Boolean= false ): String {
     return when {
         timeRemaining >= 3600 -> "$endOrStart in ${timeRemaining / 3600}h ${timeRemaining % 3600 / 60}m".trimEnd()
         timeRemaining >= 120 -> "$endOrStart in ${timeRemaining / 60}m"
-        timeRemaining >= 60 -> "$endOrStart in 1m"
+        timeRemaining >= 60 -> "$endOrStart in 1m ${timeRemaining % 60}s"
         timeRemaining > 0 -> "$endOrStart in ${timeRemaining}s"
         else -> "Running"
     }

@@ -1,6 +1,6 @@
+
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -22,9 +25,11 @@ import java.util.Locale
 
 @Composable
 fun DateTimeSelector(
+    coroutineScope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
     label: String,
-    dateTime: Date?,
-    minDateTime: Date? = null, // The minimum date-time allowed (used for End Time validation)
+    dateTime: Date?, // The minimum date-time allowed (used for End Time validation)
+    minDateTime: Date? = null,
     onDateTimeSelected: (Date) -> Unit
 ) {
     val context = LocalContext.current
@@ -34,6 +39,12 @@ fun DateTimeSelector(
     val timePickerDialog = remember { mutableStateOf(false) }
     val isChosen = remember { mutableStateOf(false) }
     val selectedCalendar = remember { mutableStateOf(Calendar.getInstance()) }
+
+    fun showToast(msg: String) {
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
 
     OutlinedButton(
         onClick = { datePickerDialog.value = true },
@@ -85,13 +96,13 @@ fun DateTimeSelector(
                 }.time
 
                 if (isToday && selectedTimestamp.time < System.currentTimeMillis()) {
-                    Toast.makeText(context, "Please select a future time", Toast.LENGTH_SHORT).show()
+                    showToast("Please select a future time")
                     return@TimePickerDialog
                 }
 
                 minDateTime?.let {
                     if (selectedTimestamp.time <= it.time) {
-                        Toast.makeText(context, "End time must be after start time!", Toast.LENGTH_SHORT).show()
+                        showToast("End time must be after start time!")
                         return@TimePickerDialog
                     }
                 }

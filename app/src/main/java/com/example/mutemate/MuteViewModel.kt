@@ -26,14 +26,12 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
 
     fun addSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("MuteViewModel", "Adding schedule: $schedule")
-
             val scheduleList = allSchedules.firstOrNull()?: emptyList()
             if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
                 return@launch
             }
             if(scheduleList.isNotEmpty() && scheduleList.first().startTime == null && schedule.startTime==null)
-                 deleteSchedule(scheduleList.first()) // delete the first item if its has empty start time as well as the new item has empty start time this means that new duration was chosen by the user
+                 deleteSchedule(scheduleList.first()) // delete the first item if its null as well as the new item is null this means that new duration was chosen by the user
             val insertedId = dao.insert(schedule).toInt()
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
             scheduleMuteTask(updatedSchedule)
@@ -43,6 +41,8 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
     fun deleteSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.delete(schedule)
+            if(dao.getRowCount()==0)
+                dao.resetAutoIncrement()
             cancelMuteTask(schedule)
         }
     }
