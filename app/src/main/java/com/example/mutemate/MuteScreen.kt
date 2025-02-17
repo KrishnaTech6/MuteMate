@@ -28,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
 import com.example.mutemate.utils.SharedPrefUtils
 import com.example.mutemate.utils.getTimeUntilStart
@@ -66,12 +65,12 @@ fun MuteScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "MuteMate", fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        Text(text = "One-Touch mute scheduler", fontSize = 16.sp, color = Color.Gray)
+        Text(text = "MuteMate", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+        Text(text = "One-Touch mute scheduler", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(20.dp))
 
         if (!customTimeSelected) {
-            Text(text = "Schedule mute for", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text(text = "Schedule mute for", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(10.dp))
             DurationSelection(
                 selectedDuration.intValue,
@@ -79,7 +78,7 @@ fun MuteScreen(
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "or select custom time", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(text = "or select custom time", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.width(4.dp))
             Switch(
                 checked = customTimeSelected,
@@ -134,7 +133,7 @@ fun MuteScreen(
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text("Set Mute Schedule", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Set Mute Schedule", style = MaterialTheme.typography.bodyMedium)
         }
         if (showDialog.value) {
             ShowDndAlert(showDialog, context)
