@@ -6,12 +6,6 @@ import android.media.AudioManager
 class MuteHelper(private val context: Context) {
 
     val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-//    val previousVolume = listOf(
-//        audioManager.getStreamVolume(AudioManager.STREAM_RING),
-//        audioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION),
-//        audioManager.getStreamVolume(AudioManager.STREAM_ALARM),
-//        audioManager.getStreamVolume(AudioManager.STREAM_MUSIC),
-//    )
 
     fun dndModeOn() {
         audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
@@ -21,15 +15,20 @@ class MuteHelper(private val context: Context) {
         audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
     }
 
-    fun vibrateModePhone() {
+    fun vibrateModePhone(muteSettings: MuteSettingsManager) {
         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
     }
 
-    fun mutePhone() {
-        audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)  // Mute Ringtone
-        audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0)  // Mute Notifications
-        audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0)  // Mute Alarms
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)  // Mute Media
+    fun mutePhone(
+        muteRingtone: Boolean,
+        muteNotifications: Boolean,
+        muteAlarms: Boolean,
+        muteMedia: Boolean
+    ) {
+        if(muteRingtone) audioManager.setStreamVolume(AudioManager.STREAM_RING, 0, 0)  // Mute Ringtone
+        if(muteNotifications) audioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0)  // Mute Notifications
+        if(muteAlarms) audioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0)  // Mute Alarms
+        if(muteMedia) audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)  // Mute Media
     }
 
     fun unmutePhone() {

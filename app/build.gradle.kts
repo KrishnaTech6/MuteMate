@@ -70,4 +70,8 @@ dependencies {
 
     implementation( "androidx.compose.material:material-icons-extended")
     implementation("com.google.code.gson:gson:2.12.1")
+
+
+    //data-store light weight alternative to sharedprefs
+    implementation("androidx.datastore:datastore-preferences:1.1.3")
 }

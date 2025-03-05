@@ -8,5 +8,6 @@ import java.util.Date
 data class MuteSchedule(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val startTime: Date?,
-    val endTime: Date?
+    val endTime: Date?,
+    val isDnd: Boolean,
 )

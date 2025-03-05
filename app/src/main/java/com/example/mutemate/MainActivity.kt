@@ -43,6 +43,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             MuteMateTheme {
+                val context = applicationContext
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
                 var showBottomSheet by remember { mutableStateOf(false) }
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { showBottomSheet = false },
                         sheetState = bottomSheetState
                     ) {
-                        SilentModeSettingsScreen(Modifier.padding(16.dp))
+                        SilentModeSettingsScreen(context, Modifier.padding(16.dp))
                     }
                 }
             }

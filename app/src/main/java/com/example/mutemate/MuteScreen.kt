@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.MuteSettingsManager
 import com.example.mutemate.utils.SharedPrefUtils
 import com.example.mutemate.utils.getTimeUntilStart
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +48,7 @@ fun MuteScreen(
     var endTime: Date? by remember { mutableStateOf(null) }
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
+    val isDnd by MuteSettingsManager(context).isDnd.collectAsState(initial = true)
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
     val formattedScheduleTime by remember(schedules) {mutableStateOf(schedules.sortedBy { getTimeUntilStart(it.startTime) })}
@@ -115,7 +117,7 @@ fun MuteScreen(
                         val endMillis = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
                         endTime = Date(endMillis)
                     }
-                    viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime))
+                    viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime, isDnd = isDnd))
                     showToast("Schedule added")
                     // Reset Values
                     endTime = null
