@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 @Preview(showBackground = true)
-fun SilentModeSettingsScreen() {
+fun SilentModeSettingsScreen(modifier: Modifier = Modifier) {
     var isDnd by remember { mutableStateOf(false) }
 
     var muteRingtone by remember { mutableStateOf(false) }
@@ -33,11 +33,11 @@ fun SilentModeSettingsScreen() {
     var muteMedia by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        Text(text = "Silent Mode Settings", style = MaterialTheme.typography.headlineMedium)
+        Text(text = "Silent Mode Settings", style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Mode Selection (DND or Custom)

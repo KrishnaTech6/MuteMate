@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -65,10 +64,6 @@ fun MuteScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "MuteMate", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-        Text(text = "One-Touch mute scheduler", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-        Spacer(modifier = Modifier.height(20.dp))
-
         if (!customTimeSelected) {
             Text(text = "Schedule mute for", style = MaterialTheme.typography.bodyMedium)
             Spacer(modifier = Modifier.height(10.dp))
@@ -78,7 +73,7 @@ fun MuteScreen(
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "or select custom time", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "or select custom date and time", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.width(4.dp))
             Switch(
                 checked = customTimeSelected,
@@ -138,9 +133,13 @@ fun MuteScreen(
         if (showDialog.value) {
             ShowDndAlert(showDialog, context)
         }
-        ScheduleList(schedule = formattedScheduleTime) {
-            viewModel.deleteSchedule(formattedScheduleTime[it])
-            showToast("Schedule deleted")
+        if(formattedScheduleTime.isEmpty()){
+            NoRunningSchedule(modifier = Modifier.padding(top = 100.dp))
+        }else{
+            ScheduleList(schedule = formattedScheduleTime) {
+                viewModel.deleteSchedule(formattedScheduleTime[it])
+                showToast("Schedule deleted")
+            }
         }
     }
 }
