@@ -1,9 +1,13 @@
 An auto mute/ unmute scheduker app 
 
-Schedules custom durations of 
-1. DND
-2. MUTE
-3. Unmute
+Customizable schedules : 
+1. Want 5 min of DND? you got it
+2. Want 5 min of mute media ... done
+3. Mute ringtones .. yes sir
+4. Mute Alarms .. you got it
+5. Mute only notifications
+or want to mute all, without DND, you got it
+
 
 Simple and useful 
 
