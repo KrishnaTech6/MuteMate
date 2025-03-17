@@ -13,10 +13,11 @@ class UnmuteWorker(private val context: Context, workerParams: WorkerParameters)
     override suspend fun doWork(): Result {
         val scheduleId = inputData.getInt("schedule_id", -1)
         val isDnd = inputData.getBoolean("isDnd", true)
+        val isVibrationMode = inputData.getBoolean("isVibration", true)
         if (scheduleId == -1) return Result.failure()
         val muteHelper = MuteHelper(context)
 
-        if(isDnd)
+        if(isDnd || isVibrationMode)
             muteHelper.normalMode()
         else
             muteHelper.unmutePhone()

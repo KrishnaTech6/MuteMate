@@ -9,19 +9,19 @@ object SharedPrefUtils {
     private const val PREF_NAME = "MyPrefs"
     private const val KEY_LIST = "my_list"
 
-    fun saveList(context: Context, list: List<Int>) {
+    fun saveList(context: Context, list: List<Int>, key: String = KEY_LIST) {
         val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val editor = prefs.edit()
 
         val gson = Gson()
         val json = gson.toJson(list) // Convert list to JSON
-        editor.putString(KEY_LIST, json)
+        editor.putString(key, json)
         editor.apply()
     }
-    fun getList(context: Context): List<Int>? {
+    fun getList(context: Context, key: String = KEY_LIST): List<Int>? {
         val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val gson = Gson()
-        val json = prefs.getString(KEY_LIST, null)
+        val json = prefs.getString(key, null)
 
         val type = object : TypeToken<List<Int>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()

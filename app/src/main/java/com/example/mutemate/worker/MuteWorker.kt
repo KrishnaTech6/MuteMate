@@ -17,6 +17,7 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
         // Read settings synchronously
         val isDnd = muteSettingsManager.isDnd.first()
         val muteRingtone = muteSettingsManager.muteRingtone.first()
+        val isVibrationMode = muteSettingsManager.isVibrate.first()
         val muteNotifications =muteSettingsManager.muteNotifications.first()
         val muteAlarms = muteSettingsManager.muteAlarms.first()
         val muteMedia = muteSettingsManager.muteMedia.first()
@@ -26,7 +27,10 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
         // Apply mute settings based on stored preferences
         if (isDnd) {
             muteHelper.dndModeOn()
-        } else {
+        }else if(isVibrationMode){
+            muteHelper.vibrateModePhone()
+        }
+        else {
            muteHelper.mutePhone(
                muteRingtone,
                muteNotifications,

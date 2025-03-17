@@ -51,7 +51,7 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
         val context = getApplication<Application>().applicationContext
         val workManager = WorkManager.getInstance(context)
         workManager.cancelUniqueWork("MuteTask_${schedule.id}")
-        if(schedule.isDnd)
+        if(schedule.isDnd || schedule.isVibrationMode)
             MuteHelper(context).normalMode()
         else
             MuteHelper(context).unmutePhone()
@@ -73,8 +73,11 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
 
         val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()
             .setInitialDelay(unmuteDelay, TimeUnit.MILLISECONDS)
-            .setInputData(workDataOf("schedule_id" to schedule.id,"isDnd" to schedule.isDnd ))
-            .build()
+            .setInputData(workDataOf(
+                "schedule_id" to schedule.id,
+                "isDnd" to schedule.isDnd,
+                "isVibration" to schedule.isVibrationMode
+            )).build()
         val muteTaskName = "MuteTask_${schedule.id}"
         val unmuteTaskName = "UnmuteTask_${schedule.id}"
         workManager.enqueueUniqueWork(muteTaskName, ExistingWorkPolicy.REPLACE, muteRequest)

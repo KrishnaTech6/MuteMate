@@ -15,7 +15,7 @@ class MuteHelper(private val context: Context) {
         audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
     }
 
-    fun vibrateModePhone(muteSettings: MuteSettingsManager) {
+    fun vibrateModePhone() {
         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
     }
 

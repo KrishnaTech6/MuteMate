@@ -12,11 +12,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.DoNotDisturb
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,8 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.MuteHelper
 import com.example.mutemate.utils.MuteSettingsManager
 import com.example.mutemate.utils.SharedPrefUtils
 import com.example.mutemate.utils.getTimeUntilStart
@@ -41,7 +48,7 @@ fun MuteScreen(
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
     viewModel: MuteViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     var startTime: Date? by remember { mutableStateOf(null) }
@@ -49,21 +56,27 @@ fun MuteScreen(
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val isDnd by MuteSettingsManager(context).isDnd.collectAsState(initial = true)
+    val isVibrationMode by MuteSettingsManager(context).isVibrate.collectAsState(initial = true)
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
-    val formattedScheduleTime by remember(schedules) {mutableStateOf(schedules.sortedBy { getTimeUntilStart(it.startTime) })}
+    val formattedScheduleTime by remember(schedules) {
+        mutableStateOf(schedules.sortedBy {
+            getTimeUntilStart(
+                it.startTime
+            )
+        })
+    }
 
     fun showToast(msg: String) {
         coroutineScope.launch {
             snackbarHostState.showSnackbar(msg)
         }
     }
-
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (!customTimeSelected) {
@@ -75,7 +88,10 @@ fun MuteScreen(
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "or select custom date and time", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "or select custom date and time",
+                style = MaterialTheme.typography.bodyMedium
+            )
             Spacer(Modifier.width(4.dp))
             Switch(
                 checked = customTimeSelected,
@@ -95,7 +111,7 @@ fun MuteScreen(
             Spacer(modifier = Modifier.height(10.dp))
             DateTimeSelector(
                 coroutineScope = coroutineScope,
-                snackbarHostState= snackbarHostState,
+                snackbarHostState = snackbarHostState,
                 label = "End Date and Time",
                 dateTime = endTime,
                 minDateTime = startTime
@@ -110,14 +126,22 @@ fun MuteScreen(
                     showDialog.value = true
                 } else if (selectedDuration.intValue == 0 && !customTimeSelected)
                     showToast("Please select duration")
-                else if (endTime==null && customTimeSelected)
+                else if (endTime == null && customTimeSelected)
                     showToast("Please select start and end time")
                 else {
                     if (!customTimeSelected) {
-                        val endMillis = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
+                        val endMillis =
+                            System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.intValue.toLong())
                         endTime = Date(endMillis)
                     }
-                    viewModel.addSchedule(MuteSchedule(startTime = startTime, endTime = endTime, isDnd = isDnd))
+                    viewModel.addSchedule(
+                        MuteSchedule(
+                            startTime = startTime,
+                            endTime = endTime,
+                            isDnd = isDnd,
+                            isVibrationMode = isVibrationMode
+                        )
+                    )
                     showToast("Schedule added")
                     // Reset Values
                     endTime = null
@@ -128,19 +152,80 @@ fun MuteScreen(
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
         ) {
-            Text("Set Mute Schedule", style = MaterialTheme.typography.bodyMedium)
+            Text("Set Schedule", style = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp))
         }
         if (showDialog.value) {
             ShowDndAlert(showDialog, context)
         }
-        if(formattedScheduleTime.isEmpty()){
+        if (formattedScheduleTime.isEmpty()) {
             NoRunningSchedule(modifier = Modifier.padding(top = 100.dp))
-        }else{
+        } else {
             ScheduleList(schedule = formattedScheduleTime) {
                 viewModel.deleteSchedule(formattedScheduleTime[it])
                 showToast("Schedule deleted")
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "Instant Actions",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(Modifier.height(8.dp))
+        MuteOptionButtons()
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+@Preview
+fun MuteOptionButtons(
+    modifier: Modifier = Modifier,
+    context: Context = LocalContext.current
+) {
+    val muteHelper = remember { MuteHelper(context) }
+
+    val buttonConfigs = listOf(
+        "DND" to Icons.Default.DoNotDisturb,
+        "Mute" to Icons.Default.NotificationsOff,
+        "Vibrate" to Icons.Default.Vibration
+    )
+
+    val selectedStates = remember { mutableStateMapOf<String, Boolean>() }
+
+    // Load saved states
+    LaunchedEffect(Unit) {
+        val savedStates = SharedPrefUtils.getList(context, "mute_states")
+        buttonConfigs.forEachIndexed { index, (title, _) ->
+            selectedStates[title] = savedStates?.contains(index) == true
+        }
+    }
+
+    fun saveState() {
+        val activeIndexes = buttonConfigs.mapIndexedNotNull { index, (title, _) ->
+            if (selectedStates[title] == true) index else null
+        }
+        SharedPrefUtils.saveList(context, activeIndexes,"mute_states")
+    }
+
+
+    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            buttonConfigs.forEach { (title, icon) ->
+                ButtonMute(
+                    icon = icon,
+                    title = title,
+                    isSelected = selectedStates[title] ?: false,
+                    onItemClick = { isSelected ->
+                        selectedStates[title] = !isSelected
+                        saveState()
+                        when (title) {
+                            "DND"-> if (selectedStates[title] == true) muteHelper.dndModeOn() else muteHelper.normalMode()
+                            "Mute" -> if (selectedStates[title] == true) muteHelper.mutePhone(true, true, true, true) else muteHelper.unmutePhone()
+                            "Vibrate" -> if (selectedStates[title] == true) muteHelper.vibrateModePhone() else muteHelper.normalMode()
+                        }
+                    }
+                )
             }
         }
     }
@@ -183,9 +268,15 @@ fun ShowDndAlert(
 @Composable
 fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) {
     val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false ) }
+    var showDialog by remember { mutableStateOf(false) }
     var options by remember {
-        mutableStateOf(SharedPrefUtils.getList(context).takeIf { !it.isNullOrEmpty() } ?: listOf(1, 5, 10, 15))}
+        mutableStateOf(SharedPrefUtils.getList(context).takeIf { !it.isNullOrEmpty() } ?: listOf(
+            1,
+            5,
+            10,
+            15
+        ))
+    }
     var newDurationText by remember { mutableStateOf("") }
     LaunchedEffect(options) {
         SharedPrefUtils.saveList(context, options)
@@ -208,11 +299,13 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                         shape = RoundedCornerShape(8.dp)
                     )
                     .background(
-                        if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        if (selectedDuration == duration) MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.2f
+                        )
                         else Color.Transparent
                     )
                     .combinedClickable(
-                        onClick = {onDurationSelected(duration)},
+                        onClick = { onDurationSelected(duration) },
                         onLongClick = {
                             durationToRemove = duration
                             showRemoveDialog = true
@@ -220,9 +313,11 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                     )
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                Text(text = "$duration min",
+                Text(
+                    text = "$duration min",
                     color = if (selectedDuration == duration) MaterialTheme.colorScheme.primary else Color.Gray,
-                    style = MaterialTheme.typography.bodyMedium)
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
         Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier
@@ -230,7 +325,8 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
             .align(Alignment.CenterVertically)
             .clickable {
                 showDialog = true
-            }, tint = Color.Gray)
+            }, tint = Color.Gray
+        )
     }
 
     // Custom Duration Input Dialog

@@ -10,4 +10,5 @@ data class MuteSchedule(
     val startTime: Date?,
     val endTime: Date?,
     val isDnd: Boolean,
+    val isVibrationMode: Boolean
 )

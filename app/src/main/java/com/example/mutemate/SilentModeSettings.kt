@@ -2,7 +2,6 @@ package com.example.mutemate
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +33,7 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
 
     val isDnd by muteSettingsManager.isDnd.collectAsState(initial = true)
     val muteRingtone by muteSettingsManager.muteRingtone.collectAsState(initial = true)
+    val isVibrationMode by muteSettingsManager.isVibrate.collectAsState(initial = true)
     val muteNotifications by muteSettingsManager.muteNotifications.collectAsState(initial = true)
     val muteAlarms by muteSettingsManager.muteAlarms.collectAsState(initial = true)
     val muteMedia by muteSettingsManager.muteMedia.collectAsState(initial = true)
@@ -45,18 +45,12 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        Text(text = "Silent Mode Settings", style = MaterialTheme.typography.titleMedium)
+        Text(text = "Silent Mode Settings", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    coroutineScope.launch {
-                        muteSettingsManager.updateDndMode(!isDnd)
-                    }
-                }
-                .padding(vertical = 4.dp),
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Switch(
@@ -70,21 +64,38 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
             Text(text = "DND Mode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Switch(
+                checked = isVibrationMode,
+                onCheckedChange = {
+                        coroutineScope.launch {
+                            muteSettingsManager.updateVibrationMode(it)
+                        }
+                },
+                enabled = !isDnd
+            )
+            Text(text = "Vibration Mode", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp))
+        }
+        Spacer(Modifier.height(8.dp))
 
-        SoundToggle("Mute Ringtone", muteRingtone, enabled = !isDnd) { isChecked ->
+        SoundToggle("Mute Ringtone", muteRingtone, enabled = !isDnd && !isVibrationMode) { isChecked ->
             coroutineScope.launch { muteSettingsManager.saveSetting(MuteSettingsManager.RINGTONE_KEY, isChecked) }
         }
 
-        SoundToggle("Mute Notifications", muteNotifications, enabled = !isDnd) { isChecked ->
+        SoundToggle("Mute Notifications", muteNotifications, enabled = !isDnd && !isVibrationMode) { isChecked ->
             coroutineScope.launch { muteSettingsManager.saveSetting(MuteSettingsManager.NOTIFICATIONS_KEY, isChecked) }
         }
 
-        SoundToggle("Mute Alarms", muteAlarms, enabled = !isDnd) { isChecked ->
+        SoundToggle("Mute Alarms", muteAlarms, enabled = !isDnd && !isVibrationMode) { isChecked ->
             coroutineScope.launch { muteSettingsManager.saveSetting(MuteSettingsManager.ALARMS_KEY, isChecked) }
         }
 
-        SoundToggle("Mute Media", muteMedia, enabled = !isDnd) { isChecked ->
+        SoundToggle("Mute Media", muteMedia, enabled = !isDnd && !isVibrationMode) { isChecked ->
             coroutineScope.launch { muteSettingsManager.saveSetting(MuteSettingsManager.MEDIA_KEY, isChecked) }
         }
     }
@@ -96,8 +107,7 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
 fun SoundToggle(title: String, isChecked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
