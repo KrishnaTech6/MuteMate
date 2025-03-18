@@ -26,4 +26,21 @@ object SharedPrefUtils {
         val type = object : TypeToken<List<Int>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
+
+
+    fun getString(context: Context, key: String): String? {
+        val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(key, null)
+    }
+
+    fun saveString(
+        context: Context,
+        text: String,
+        key: String
+    ){
+        val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        editor.putString(key, text)
+        editor.apply()
+    }
 }

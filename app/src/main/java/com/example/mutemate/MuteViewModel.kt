@@ -12,6 +12,7 @@ import androidx.work.workDataOf
 import com.example.mutemate.model.MuteSchedule
 import com.example.mutemate.room.MuteScheduleDao
 import com.example.mutemate.utils.MuteHelper
+import com.example.mutemate.utils.NotificationHelper
 import com.example.mutemate.utils.calculateDelay
 import com.example.mutemate.worker.MuteWorker
 import com.example.mutemate.worker.UnmuteWorker
@@ -41,6 +42,8 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
     fun deleteSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.delete(schedule)
+            val context = getApplication<Application>().applicationContext
+            NotificationHelper.dismissNotification(context = context, schedule.id)
             if(dao.getRowCount()==0)
                 dao.resetAutoIncrement()
             cancelMuteTask(schedule)
@@ -69,6 +72,7 @@ class MuteViewModel(private val dao: MuteScheduleDao,application: Application) :
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
             .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
             .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
+            .setInputData(workDataOf("schedule_id" to schedule.id))
             .build()
 
         val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()

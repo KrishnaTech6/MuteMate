@@ -191,23 +191,17 @@ fun MuteOptionButtons(
         "Vibrate" to Icons.Default.Vibration
     )
 
-    val selectedStates = remember { mutableStateMapOf<String, Boolean>() }
+    val selectedState = remember { mutableStateOf<String?>(null) } // Only one selection
 
-    // Load saved states
+    // Load saved state
     LaunchedEffect(Unit) {
-        val savedStates = SharedPrefUtils.getList(context, "mute_states")
-        buttonConfigs.forEachIndexed { index, (title, _) ->
-            selectedStates[title] = savedStates?.contains(index) == true
-        }
+        val savedState = SharedPrefUtils.getString(context, "selected_mute_option")
+        selectedState.value = savedState
     }
 
-    fun saveState() {
-        val activeIndexes = buttonConfigs.mapIndexedNotNull { index, (title, _) ->
-            if (selectedStates[title] == true) index else null
-        }
-        SharedPrefUtils.saveList(context, activeIndexes,"mute_states")
+    fun saveState(selectedOption: String?) {
+        SharedPrefUtils.saveString(context, selectedOption ?: "", "selected_mute_option")
     }
-
 
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -215,14 +209,26 @@ fun MuteOptionButtons(
                 ButtonMute(
                     icon = icon,
                     title = title,
-                    isSelected = selectedStates[title] ?: false,
-                    onItemClick = { isSelected ->
-                        selectedStates[title] = !isSelected
-                        saveState()
-                        when (title) {
-                            "DND"-> if (selectedStates[title] == true) muteHelper.dndModeOn() else muteHelper.normalMode()
-                            "Mute" -> if (selectedStates[title] == true) muteHelper.mutePhone(true, true, true, true) else muteHelper.unmutePhone()
-                            "Vibrate" -> if (selectedStates[title] == true) muteHelper.vibrateModePhone() else muteHelper.normalMode()
+                    isSelected = selectedState.value == title, // Check if this button is selected
+                    onItemClick = {
+                        val newState = if (selectedState.value == title) null else title // Toggle logic
+                        selectedState.value = newState
+                        saveState(newState)
+
+                        when (newState) {
+                            "DND" -> {
+                                muteHelper.normalMode()
+                                muteHelper.dndModeOn()
+                            }
+                            "Mute" -> {
+                                muteHelper.normalMode()
+                                muteHelper.mutePhone(true, true, true, true)
+                            }
+                            "Vibrate" -> {
+                                muteHelper.normalMode()
+                                muteHelper.vibrateModePhone()
+                            }
+                            null -> muteHelper.normalMode() // Deselect all → Normal mode
                         }
                     }
                 )
@@ -273,8 +279,7 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
         mutableStateOf(SharedPrefUtils.getList(context).takeIf { !it.isNullOrEmpty() } ?: listOf(
             1,
             5,
-            10,
-            15
+            10
         ))
     }
     var newDurationText by remember { mutableStateOf("") }

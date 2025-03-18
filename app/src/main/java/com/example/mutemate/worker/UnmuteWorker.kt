@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.mutemate.room.DatabaseProvider
 import com.example.mutemate.utils.MuteHelper
+import com.example.mutemate.utils.NotificationHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -28,6 +29,7 @@ class UnmuteWorker(private val context: Context, workerParams: WorkerParameters)
         withContext(Dispatchers.IO) {
             DatabaseProvider.getDatabase(context).muteScheduleDao().deleteId(scheduleId)
         }
+        NotificationHelper.dismissNotification(context, scheduleId)
         return Result.success()
     }
 }
