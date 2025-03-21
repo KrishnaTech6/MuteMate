@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.ui
 
 import DateTimeSelector
 import android.app.NotificationManager
@@ -41,6 +41,7 @@ import com.example.mutemate.utils.MuteSettingsManager
 import com.example.mutemate.utils.SharedPrefUtils
 import com.example.mutemate.utils.getTimeUntilStart
 import com.example.mutemate.utils.isBatteryLow
+import com.example.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.*
@@ -608,7 +609,8 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.horizontalScroll(rememberScrollState())
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = (-16).dp),
     ) {
         options.forEach { duration ->
             Card(

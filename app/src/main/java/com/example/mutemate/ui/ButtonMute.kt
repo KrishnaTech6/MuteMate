@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +33,7 @@ fun ButtonMute(
     modifier: Modifier = Modifier,
     onItemClick: (Boolean) -> Unit = {},
 ) {
-    val colorNew = if(isSelected) color.copy(0.2f) else Color.White
+    val colorNew = if(isSelected) color.copy(0.1f) else Color.White
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -47,7 +47,7 @@ fun ButtonMute(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.size(50.dp)
+            modifier = Modifier.size(40.dp)
         ){
             Icon(
                 imageVector = icon,

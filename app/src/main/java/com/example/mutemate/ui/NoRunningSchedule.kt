@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,13 +22,13 @@ fun NoRunningSchedule(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Default.CalendarToday,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.colorScheme.primary.copy(0.6f),
             modifier = Modifier.padding(8.dp).size(30.dp)
         )
         Text(
             text = "No running schedules",
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary.copy(0.6f)
 
         )
 

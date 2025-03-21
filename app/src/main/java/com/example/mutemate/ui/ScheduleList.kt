@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.ui
 
 import android.util.Log
 import androidx.compose.foundation.border
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,11 +38,17 @@ import java.util.Locale
 
 @Composable
 fun ScheduleList(schedule: List<MuteSchedule>, onRemove: (Int) -> Unit) {
-    LazyColumn {
-        items(schedule.size) { index ->
-            val schedule = schedule[index]
-            ScheduleItem(index, schedule){
-                onRemove(index)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min= 200.dp, max = 400.dp)
+    ) {
+        LazyColumn {
+            items(schedule.size) { index ->
+                val schedule = schedule[index]
+                ScheduleItem(index, schedule) {
+                    onRemove(index)
+                }
             }
         }
     }

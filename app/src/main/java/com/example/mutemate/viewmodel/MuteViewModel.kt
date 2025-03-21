@@ -1,4 +1,4 @@
-package com.example.mutemate
+package com.example.mutemate.viewmodel
 
 import android.app.Application
 import android.util.Log
