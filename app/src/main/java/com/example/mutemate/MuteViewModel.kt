@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
-class MuteViewModel(private val dao: MuteScheduleDao,application: Application) : AndroidViewModel(application) {
+class MuteViewModel(private val dao: MuteScheduleDao, application: Application) : AndroidViewModel(application) {
     val allSchedules: Flow<List<MuteSchedule>> = dao.getSchedules()
 
     fun addSchedule(schedule: MuteSchedule) {
