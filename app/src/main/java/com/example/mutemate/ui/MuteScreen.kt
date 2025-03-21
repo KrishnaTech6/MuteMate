@@ -88,7 +88,7 @@ fun MuteScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                ,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ScheduleSection(
@@ -104,7 +104,7 @@ fun MuteScreen(
                 snackbarHostState = snackbarHostState
             )
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             ScheduleButton(
                 context = context,
@@ -183,7 +183,7 @@ private fun ScheduleSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -213,9 +213,6 @@ private fun ScheduleSection(
                         )
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
                 DurationSelection(
                     selectedDuration = selectedDuration,
                     onDurationSelected = onDurationSelected,
@@ -228,7 +225,7 @@ private fun ScheduleSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -259,11 +256,9 @@ private fun ScheduleSection(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Start Time Selection
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -292,7 +287,7 @@ private fun ScheduleSection(
 
                 // End Time Selection
                 Card(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -340,7 +335,8 @@ private fun ScheduleButton(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(16.dp)
+        ,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
@@ -610,7 +606,7 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = (-16).dp),
+        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
     ) {
         options.forEach { duration ->
             Card(
