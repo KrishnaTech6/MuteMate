@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.DoNotDisturb
@@ -34,7 +35,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
 import com.example.mutemate.utils.MuteHelper
 import com.example.mutemate.utils.MuteSettingsManager
@@ -80,11 +80,13 @@ fun MuteScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize()) {
+        // Scrollable content
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -126,7 +128,7 @@ fun MuteScreen(
             }
 
             if (formattedScheduleTime.isEmpty()) {
-                NoRunningSchedule(modifier = Modifier.padding(top = 100.dp))
+                NoRunningSchedule(modifier = Modifier.height(160.dp))
             } else {
                 ScheduleList(
                     schedule = formattedScheduleTime,
@@ -136,10 +138,22 @@ fun MuteScreen(
                     }
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.weight(1f))
-            
-            InstantActionsSection()
+        // Fixed bottom bar
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.background,
+            tonalElevation = 8.dp
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                InstantActionsSection()
+            }
         }
     }
 }
@@ -322,37 +336,145 @@ private fun ScheduleButton(
     onShowDialog: () -> Unit,
     onShowToast: (String) -> Unit
 ) {
-    Button(
-        onClick = {
-            when {
-                !hasNotificationPolicyAccess(context) -> onShowDialog()
-                isBatteryLow(context) -> onShowToast("Battery is low, can't schedule task")
-                (selectedDuration == 0 && !customTimeSelected) -> onShowToast("Please select duration")
-                (endTime == null && customTimeSelected) -> onShowToast("Please select start and end time")
-                else -> {
-                    val finalEndTime = if (!customTimeSelected) {
-                        Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.toLong()))
-                    } else endTime
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Schedule Summary
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Schedule Summary",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    Text(
+                        text = if (customTimeSelected) {
+                            "Custom time schedule"
+                        } else {
+                            "$selectedDuration minutes"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = "Schedule",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
 
-                    onScheduleAdd(
-                        MuteSchedule(
-                            startTime = startTime,
-                            endTime = finalEndTime,
-                            isDnd = isDnd,
-                            isVibrationMode = isVibrationMode
+            // Settings Summary
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // DND Setting
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DoNotDisturb,
+                        contentDescription = "DND",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = if (isDnd) "DND On" else "DND Off",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+
+                // Vibration Setting
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Vibration,
+                        contentDescription = "Vibration",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = if (isVibrationMode) "Vibrate On" else "Vibrate Off",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Action Button
+            Button(
+                onClick = {
+                    when {
+                        !hasNotificationPolicyAccess(context) -> onShowDialog()
+                        isBatteryLow(context) -> onShowToast("Battery is low, can't schedule task")
+                        (selectedDuration == 0 && !customTimeSelected) -> onShowToast("Please select duration")
+                        (endTime == null && customTimeSelected) -> onShowToast("Please select start and end time")
+                        else -> {
+                            val finalEndTime = if (!customTimeSelected) {
+                                Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.toLong()))
+                            } else endTime
+
+                            onScheduleAdd(
+                                MuteSchedule(
+                                    startTime = startTime,
+                                    endTime = finalEndTime,
+                                    isDnd = isDnd,
+                                    isVibrationMode = isVibrationMode
+                                )
+                            )
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddCircle,
+                        contentDescription = "Add Schedule",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        "Set Schedule",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = FontWeight.Medium
                         )
                     )
                 }
             }
-        },
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            "Set Schedule",
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 20.sp)
-        )
+        }
     }
 }
 

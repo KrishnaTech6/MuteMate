@@ -1,5 +1,6 @@
 package com.example.mutemate
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,7 +18,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 @Preview(showBackground = true)
 fun NoRunningSchedule(modifier: Modifier = Modifier) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier){
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier, verticalArrangement = Arrangement.Center ){
         Icon(
             imageVector = Icons.Default.CalendarToday,
             contentDescription = null,
@@ -25,7 +26,7 @@ fun NoRunningSchedule(modifier: Modifier = Modifier) {
             modifier = Modifier.padding(8.dp).size(30.dp)
         )
         Text(
-            text = "No running schedule",
+            text = "No running schedules",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary
 
