@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -20,6 +21,7 @@ class MuteSettingsManager(private val context: Context) {
          val NOTIFICATIONS_KEY = booleanPreferencesKey("mute_notifications")
          val ALARMS_KEY = booleanPreferencesKey("mute_alarms")
          val MEDIA_KEY = booleanPreferencesKey("mute_media")
+         val QUICK_MUTE_DURATION_KEY = intPreferencesKey("quick_mute_duration")
     }
 
     // Get saved values (Flow emits changes automatically)
@@ -29,9 +31,15 @@ class MuteSettingsManager(private val context: Context) {
     val muteNotifications: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_KEY] ?: false }
     val muteAlarms: Flow<Boolean> = context.dataStore.data.map { it[ALARMS_KEY] ?: false }
     val muteMedia: Flow<Boolean> = context.dataStore.data.map { it[MEDIA_KEY] ?: false }
+    val quickMuteDuration: Flow<Int> = context.dataStore.data.map { it[QUICK_MUTE_DURATION_KEY] ?: 30 } // Default 30 minutes
 
     // Save a setting
     suspend fun saveSetting(key: Preferences.Key<Boolean>, value: Boolean) {
+        context.dataStore.edit { it[key] = value }
+    }
+
+    // Save integer setting
+    suspend fun saveIntSetting(key: Preferences.Key<Int>, value: Int) {
         context.dataStore.edit { it[key] = value }
     }
 
@@ -44,5 +52,11 @@ class MuteSettingsManager(private val context: Context) {
     suspend fun updateVibrationMode(enabled: Boolean) {
         saveSetting(VIBRATION_KEY, enabled)
         Log.d("TAG", "updateVibrationMode: $enabled")
+    }
+    
+    // Update quick mute duration
+    suspend fun updateQuickMuteDuration(minutes: Int) {
+        saveIntSetting(QUICK_MUTE_DURATION_KEY, minutes)
+        Log.d("TAG", "updateQuickMuteDuration: $minutes")
     }
 }

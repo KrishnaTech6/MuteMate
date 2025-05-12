@@ -16,9 +16,11 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,10 +28,9 @@ import androidx.compose.ui.unit.dp
 import com.example.mutemate.utils.MuteSettingsManager
 import kotlinx.coroutines.launch
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SilentModeSettingsScreen(onDismissRequest: () -> Unit, bottomSheetState: SheetState,context: Context = LocalContext.current, modifier: Modifier = Modifier) {
+fun SilentModeSettingsScreen(onDismissRequest: () -> Unit, bottomSheetState: SheetState, context: Context = LocalContext.current, modifier: Modifier = Modifier) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = bottomSheetState
@@ -43,6 +44,7 @@ fun SilentModeSettingsScreen(onDismissRequest: () -> Unit, bottomSheetState: She
         val muteNotifications by muteSettingsManager.muteNotifications.collectAsState(initial = true)
         val muteAlarms by muteSettingsManager.muteAlarms.collectAsState(initial = true)
         val muteMedia by muteSettingsManager.muteMedia.collectAsState(initial = true)
+        val quickMuteDuration by muteSettingsManager.quickMuteDuration.collectAsState(initial = 30)
 
         Log.d(
             "SilentModeSettingsScreen",
@@ -151,11 +153,34 @@ fun SilentModeSettingsScreen(onDismissRequest: () -> Unit, bottomSheetState: She
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Quick Mute Duration: $quickMuteDuration minutes",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.material3.Slider(
+                value = quickMuteDuration.toFloat(),
+                onValueChange = { newValue ->
+                    val roundedValue = newValue.toInt()
+                    coroutineScope.launch {
+                        muteSettingsManager.updateQuickMuteDuration(roundedValue)
+                    }
+                },
+                valueRange = 1f..120f,
+                steps = 119,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Triple-press volume down button to activate",
+                style = MaterialTheme.typography.labelSmall
+            )
         }
     }
 }
-
-
 
 @Composable
 fun SoundToggle(title: String, isChecked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {

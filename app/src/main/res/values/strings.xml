@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MuteMate</string>
+    <string name="volume_service_description">DND mode activated</string>
 </resources>
