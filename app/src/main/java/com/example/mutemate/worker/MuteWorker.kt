@@ -15,7 +15,7 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
     override suspend fun doWork(): Result {
         Log.d("MuteWorker", "Phone muted")
         val scheduleId = inputData.getInt("schedule_id", -1)
-        val delay = inputData.getInt("delay", -1)
+        val delay = inputData.getLong("delay", -1)
         val muteSettingsManager = MuteSettingsManager(context)
         val muteHelper = MuteHelper(context)
 
@@ -52,7 +52,7 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
         NotificationHelper.showPersistentNotification(
             context,
             scheduleTitle,
-            "Schedule will end at $formattedDateTime hours.",
+            "Schedule will end at $formattedDateTime.",
             scheduleId
         )
         return Result.success()

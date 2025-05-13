@@ -22,6 +22,7 @@ class MuteSettingsManager(private val context: Context) {
          val ALARMS_KEY = booleanPreferencesKey("mute_alarms")
          val MEDIA_KEY = booleanPreferencesKey("mute_media")
          val QUICK_MUTE_DURATION_KEY = intPreferencesKey("quick_mute_duration")
+         val QUICK_MUTE_ENABLED = booleanPreferencesKey("quick_mute_enabled")
     }
 
     // Get saved values (Flow emits changes automatically)
@@ -31,6 +32,7 @@ class MuteSettingsManager(private val context: Context) {
     val muteNotifications: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS_KEY] ?: false }
     val muteAlarms: Flow<Boolean> = context.dataStore.data.map { it[ALARMS_KEY] ?: false }
     val muteMedia: Flow<Boolean> = context.dataStore.data.map { it[MEDIA_KEY] ?: false }
+    val isQuickMuteGestureEnabled: Flow<Boolean> = context.dataStore.data.map { it[QUICK_MUTE_ENABLED] ?: false }
     val quickMuteDuration: Flow<Int> = context.dataStore.data.map { it[QUICK_MUTE_DURATION_KEY] ?: 30 } // Default 30 minutes
 
     // Save a setting

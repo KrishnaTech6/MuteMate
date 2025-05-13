@@ -62,19 +62,19 @@ class MuteMateAccessibilityService: AccessibilityService() {
     private fun activateCustomDurationMute() {
         scope.launch {
             try {
-                val context = applicationContext
-                val workManager = WorkManager.getInstance(context)
+                val workManager = WorkManager.getInstance(applicationContext)
+                val muteSettingsManager = MuteSettingsManager(applicationContext)
+
                 val scheduleId = System.currentTimeMillis()
-                val muteDelay = 0L
-                val muteSettingsManager = MuteSettingsManager(context)
                 val isDnd = muteSettingsManager.isDnd.first()
                 val isVibration = muteSettingsManager.isVibrate.first()
+                val muteDelay = 0L
                 val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()
 
                 val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
                     .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
                     .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
-                    .setInputData(workDataOf("schedule_id" to scheduleId, "delay" to unmuteDelay))
+                    .setInputData(workDataOf("schedule_id" to scheduleId, "delay" to unmuteDelay*60*1000))
                     .build()
 
 
