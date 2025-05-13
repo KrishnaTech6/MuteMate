@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--    android:accessibilityEventTypes="typeAllMask" if you want to allow this for broader touches etc-->
 <accessibility-service
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="100"
     android:canRequestFilterKeyEvents="true"

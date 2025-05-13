@@ -74,7 +74,7 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
                     .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
                     .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
-                    .setInputData(workDataOf("schedule_id" to scheduleId))
+                    .setInputData(workDataOf("schedule_id" to scheduleId, "delay" to unmuteDelay))
                     .build()
 
 

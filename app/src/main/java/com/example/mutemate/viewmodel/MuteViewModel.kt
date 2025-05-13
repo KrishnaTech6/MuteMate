@@ -72,7 +72,7 @@ class MuteViewModel(private val dao: MuteScheduleDao, application: Application) 
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
             .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
             .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
-            .setInputData(workDataOf("schedule_id" to schedule.id))
+            .setInputData(workDataOf("schedule_id" to schedule.id, "delay" to unmuteDelay))
             .build()
 
         val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()

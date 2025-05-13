@@ -8,11 +8,14 @@ import com.example.mutemate.utils.MuteHelper
 import com.example.mutemate.utils.MuteSettingsManager
 import com.example.mutemate.utils.NotificationHelper
 import kotlinx.coroutines.flow.first
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class MuteWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         Log.d("MuteWorker", "Phone muted")
         val scheduleId = inputData.getInt("schedule_id", -1)
+        val delay = inputData.getInt("delay", -1)
         val muteSettingsManager = MuteSettingsManager(context)
         val muteHelper = MuteHelper(context)
 
@@ -25,12 +28,14 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
         val muteMedia = muteSettingsManager.muteMedia.first()
 
         Log.d("MuteWorker", "Applying mute settings - DND: $isDnd, Ringtone: $muteRingtone, Notifications: $muteNotifications, Alarms: $muteAlarms, Media: $muteMedia")
-
+        var scheduleTitle = ""
         // Apply mute settings based on stored preferences
         if (isDnd) {
             muteHelper.dndModeOn()
+            scheduleTitle = "DND Mode schedule running."
         }else if(isVibrationMode){
             muteHelper.vibrateModePhone()
+            scheduleTitle = "Vibration Mode schedule running."
         }
         else {
            muteHelper.mutePhone(
@@ -39,11 +44,15 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
                muteAlarms,
                muteMedia
            )
+            scheduleTitle = "Mute schedule running."
         }
+        val dateTime = System.currentTimeMillis() + delay
+        val dateFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+        val formattedDateTime = dateFormat.format(dateTime)
         NotificationHelper.showPersistentNotification(
             context,
-            "Schedule Running",
-            "Your schedule is currently active.",
+            scheduleTitle,
+            "Schedule will end at $formattedDateTime hours.",
             scheduleId
         )
         return Result.success()

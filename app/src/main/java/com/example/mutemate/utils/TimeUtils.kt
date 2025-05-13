@@ -21,3 +21,14 @@ fun calculateDelay(time: Date?): Long {
     val targetTime = time
     return targetTime.time - currentTime
 }
+
+fun formatTimeRemaining(timeRemaining: Int, isEnd: Boolean= false ): String {
+    val endOrStart= if(!isEnd) "Starts" else "Ends"
+    return when {
+        timeRemaining >= 3600 -> "$endOrStart in ${timeRemaining / 3600}h ${timeRemaining % 3600 / 60}m".trimEnd()
+        timeRemaining >= 120 -> "$endOrStart in ${timeRemaining / 60}m"
+        timeRemaining >= 60 -> "$endOrStart in 1m ${timeRemaining % 60}s"
+        timeRemaining > 0 -> "$endOrStart in ${timeRemaining}s"
+        else -> "Running"
+    }
+}

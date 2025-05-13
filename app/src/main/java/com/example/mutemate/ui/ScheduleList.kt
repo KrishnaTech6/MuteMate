@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.utils.formatTimeRemaining
 import com.example.mutemate.utils.getTimeUntilStart
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -173,17 +174,6 @@ fun formatScheduleDuration(startTime: Date?, endTime: Date?): String {
     } catch (e: Exception) {
         Log.e("ScheduleDuration", "Error formatting schedule duration: ${e.message}")
         return ""
-    }
-}
-
-fun formatTimeRemaining(timeRemaining: Int, isEnd: Boolean= false ): String {
-    val endOrStart= if(!isEnd) "Starts" else "Ends"
-    return when {
-        timeRemaining >= 3600 -> "$endOrStart in ${timeRemaining / 3600}h ${timeRemaining % 3600 / 60}m".trimEnd()
-        timeRemaining >= 120 -> "$endOrStart in ${timeRemaining / 60}m"
-        timeRemaining >= 60 -> "$endOrStart in 1m ${timeRemaining % 60}s"
-        timeRemaining > 0 -> "$endOrStart in ${timeRemaining}s"
-        else -> "Running"
     }
 }
 
