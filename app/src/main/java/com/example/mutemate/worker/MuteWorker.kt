@@ -16,6 +16,7 @@ class MuteWorker(private val context: Context, workerParams: WorkerParameters) :
         Log.d("MuteWorker", "Phone muted")
         val scheduleId = inputData.getInt("schedule_id", -1)
         val delay = inputData.getLong("delay", -1)
+        Log.d("MuteWorker", "Schedule ID: $scheduleId, Delay: $delay")
         val muteSettingsManager = MuteSettingsManager(context)
         val muteHelper = MuteHelper(context)
 

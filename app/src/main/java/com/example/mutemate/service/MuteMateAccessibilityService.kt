@@ -11,6 +11,8 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.example.mutemate.model.MuteSchedule
+import com.example.mutemate.room.DatabaseProvider
 import com.example.mutemate.utils.MuteSettingsManager
 import com.example.mutemate.worker.MuteWorker
 import com.example.mutemate.worker.UnmuteWorker
@@ -18,6 +20,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 class MuteMateAccessibilityService: AccessibilityService() {
@@ -65,16 +69,27 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 val workManager = WorkManager.getInstance(applicationContext)
                 val muteSettingsManager = MuteSettingsManager(applicationContext)
 
-                val scheduleId = System.currentTimeMillis()
+                var scheduleId = 0
                 val isDnd = muteSettingsManager.isDnd.first()
                 val isVibration = muteSettingsManager.isVibrate.first()
                 val muteDelay = 0L
-                val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()
+                val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()*60*1000
+                // Insert to DB using Singleton
+                withContext(Dispatchers.IO) {
+                    val updatedScheduleId = DatabaseProvider.getDatabase(applicationContext).muteScheduleDao().insert(
+                        MuteSchedule(
+                            isDnd = isDnd,
+                            isVibrationMode = isVibration,
+                            startTime = Date(),
+                            endTime = Date(System.currentTimeMillis() + unmuteDelay),
+                        ))
+                    scheduleId = updatedScheduleId.toInt()
+                }
 
                 val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
                     .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
                     .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
-                    .setInputData(workDataOf("schedule_id" to scheduleId, "delay" to unmuteDelay*60*1000))
+                    .setInputData(workDataOf("schedule_id" to scheduleId, "delay" to unmuteDelay))
                     .build()
 
 

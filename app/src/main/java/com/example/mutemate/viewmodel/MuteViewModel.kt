@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -71,7 +70,6 @@ class MuteViewModel(private val dao: MuteScheduleDao, application: Application) 
 
         val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
             .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
-            .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
             .setInputData(workDataOf("schedule_id" to schedule.id, "delay" to unmuteDelay))
             .build()
 

@@ -15,6 +15,8 @@ class UnmuteWorker(private val context: Context, workerParams: WorkerParameters)
         val scheduleId = inputData.getInt("schedule_id", -1)
         val isDnd = inputData.getBoolean("isDnd", true)
         val isVibrationMode = inputData.getBoolean("isVibration", true)
+
+        Log.d("UnMuteWorker", "Schedule ID: $scheduleId")
         if (scheduleId == -1) return Result.failure()
         val muteHelper = MuteHelper(context)
 
