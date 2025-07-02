@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mutemate"
+    namespace = "com.krishna.mutemate"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.mutemate"
+        applicationId = "com.krishna.mutemate"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

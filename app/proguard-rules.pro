@@ -42,8 +42,8 @@
 }
 
 # Keep your model classes used with Room
--keep class com.example.mutemate.model.** { *; }
--keep class com.example.mutemate.room.** { *; }
+-keep class com.krishna.mutemate.model.** { *; }
+-keep class com.krishna.mutemate.room.** { *; }
 
 # Gson rules
 -keep class com.google.gson.** { *; }
@@ -64,13 +64,13 @@
 }
 
 # Keep workers
--keep class com.example.mutemate.worker.** { *; }
+-keep class com.krishna.mutemate.worker.** { *; }
 
 # Keep accessiblity feature
--keep class com.example.mutemate.service.**{*;}
+-keep class com.krishna.mutemate.service.**{*;}
 
 # Keep ViewModels and Factories
--keep class com.example.mutemate.viewmodel.** { *; }
+-keep class com.krishna.mutemate.viewmodel.** { *; }
 -keepclassmembers class * extends androidx.lifecycle.ViewModel {
     <init>(...);
 }
