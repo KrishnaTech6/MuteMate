@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -51,6 +52,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.hilt.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -75,4 +77,14 @@ dependencies {
 
     //data-store light weight alternative to sharedprefs
     implementation("androidx.datastore:datastore-preferences:1.1.3")
+
+    implementation("com.google.dagger:hilt-android:2.52")
+    ksp("com.google.dagger:hilt-android-compiler:2.52")
+    implementation("androidx.hilt:hilt-work:1.0.0")
+
+    implementation ("com.google.code.gson:gson:2.13.1")
+    implementation("javax.inject:javax.inject:1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+
 }

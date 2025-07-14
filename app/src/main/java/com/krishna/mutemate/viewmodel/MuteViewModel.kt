@@ -1,7 +1,7 @@
 package com.krishna.mutemate.viewmodel
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.krishna.mutemate.model.MuteSchedule
@@ -10,12 +10,20 @@ import com.krishna.mutemate.utils.NotificationHelper
 import com.krishna.mutemate.utils.calculateDelay
 import com.krishna.mutemate.utils.cancelMuteTasks
 import com.krishna.mutemate.utils.scheduleWorker
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
-class MuteViewModel(private val dao: MuteScheduleDao, application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class MuteViewModel @Inject constructor(
+    private val dao: MuteScheduleDao,
+    private val app: Application,
+    private val workManager: WorkManager
+) : ViewModel(){
+
     val allSchedules: Flow<List<MuteSchedule>> = dao.getSchedules()
 
     fun addSchedule(schedule: MuteSchedule) {
@@ -35,18 +43,14 @@ class MuteViewModel(private val dao: MuteScheduleDao, application: Application) 
     fun deleteSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.delete(schedule)
-            val context = getApplication<Application>().applicationContext
-            NotificationHelper.dismissNotification(context = context, schedule.id)
+            NotificationHelper.dismissNotification(context = app.applicationContext, schedule.id)
             if(dao.getRowCount()==0)
                 dao.resetAutoIncrement()
-            cancelMuteTasks(context , schedule)
+            cancelMuteTasks(app.applicationContext , schedule)
         }
     }
 
     private fun scheduleMuteTask(schedule: MuteSchedule) {
-        val context = getApplication<Application>().applicationContext
-        val workManager = WorkManager.getInstance(context)
-
         val muteDelay = calculateDelay(schedule.startTime)
         val unmuteDelay = calculateDelay(schedule.endTime)
 

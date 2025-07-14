@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
@@ -30,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.krishna.mutemate.room.AppDatabase
 import com.krishna.mutemate.ui.MuteScreen
 import com.krishna.mutemate.ui.SilentModeSettingsScreen
 import com.krishna.mutemate.ui.TopAppBarTitle
@@ -38,11 +36,11 @@ import com.krishna.mutemate.ui.theme.MuteMateTheme
 import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.NotificationHelper
-import com.krishna.mutemate.viewmodel.MuteViewModel
-import com.krishna.mutemate.viewmodel.MuteViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,16 +49,8 @@ class MainActivity : ComponentActivity() {
         NotificationHelper.createNotificationChannel(this)
         // Request notification permission
         requestNotificationPermission()
-
-        val viewModel: MuteViewModel by viewModels {
-            MuteViewModelFactory(
-                AppDatabase.getDatabase(applicationContext).muteScheduleDao(),
-                application
-            )
-        }
         setContent {
             MuteMateTheme {
-                val context = applicationContext
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
                 var showBottomSheet by remember { mutableStateOf(false) }
@@ -83,7 +73,6 @@ class MainActivity : ComponentActivity() {
                     MuteScreen(
                         snackbarHostState,
                         coroutineScope,
-                        viewModel,
                         modifier = Modifier.padding(padding)
                     )
                 }

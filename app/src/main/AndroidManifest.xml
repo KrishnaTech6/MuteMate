@@ -17,6 +17,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MuteMate"
+        android:name=".MyApp"
         tools:targetApi="31">
         <service
             android:name=".service.MuteMateAccessibilityService"
@@ -29,6 +30,10 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config"/>
         </service>
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

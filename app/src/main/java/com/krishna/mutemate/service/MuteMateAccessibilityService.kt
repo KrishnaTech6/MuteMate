@@ -9,9 +9,11 @@ import android.widget.Toast
 import androidx.work.WorkManager
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
-import com.krishna.mutemate.room.AppDatabase
+import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.scheduleWorker
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -19,11 +21,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
 
+@AndroidEntryPoint
 class MuteMateAccessibilityService: AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var volumeDownCount = 0
     private val resetDelay = 800L // milliseconds to reset counter
     private val scope = CoroutineScope(Dispatchers.Main)
+    @Inject lateinit var dao: MuteScheduleDao
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         // Optional: Handle UI events here if needed
@@ -74,10 +78,7 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 )
                 // Insert to DB using Singleton
                 withContext(Dispatchers.IO) {
-                    val updatedScheduleId = AppDatabase.getDatabase(applicationContext)
-                        .muteScheduleDao()
-                        .insert(schedule)
-
+                    val updatedScheduleId = dao.insert(schedule)
                      schedule.copy(id = updatedScheduleId.toInt() )
                 }
 

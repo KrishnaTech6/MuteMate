@@ -39,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +66,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.utils.MuteHelper
@@ -89,9 +91,9 @@ import java.util.concurrent.TimeUnit
 fun MuteScreen(
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
-    viewModel: MuteViewModel,
     modifier: Modifier = Modifier,
 ) {
+    val viewModel: MuteViewModel = hiltViewModel()
     val context = LocalContext.current
     var startTime: Date? by remember { mutableStateOf(null) }
     var endTime: Date? by remember { mutableStateOf(null) }
@@ -121,6 +123,7 @@ fun MuteScreen(
                 ,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(12.dp))
             ScheduleSection(
                 customTimeSelected = customTimeSelected,
                 selectedDuration = selectedDuration.intValue,
@@ -133,9 +136,13 @@ fun MuteScreen(
                 coroutineScope = coroutineScope,
                 snackbarHostState = snackbarHostState
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
+            Spacer(modifier = Modifier.height(28.dp))
+            // Divider between Schedule and Set Schedule
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+            )
             ScheduleButton(
                 context = context,
                 customTimeSelected = customTimeSelected,
@@ -153,13 +160,15 @@ fun MuteScreen(
                 onShowDialog = { showDialog.value = true },
                 onShowToast = { showToast(it) }
             )
-
+            Spacer(modifier = Modifier.height(10.dp))
             if (showDialog.value) {
                 ShowDndAlert(showDialog, context)
             }
-
             if (formattedScheduleTime.isEmpty()) {
-                NoRunningSchedule(modifier = Modifier.height(160.dp))
+                NoRunningSchedule(
+                    modifier = Modifier
+                        .height(160.dp)
+                        .padding(vertical = 24.dp))
             } else {
                 ScheduleList(
                     schedule = formattedScheduleTime,
@@ -170,20 +179,22 @@ fun MuteScreen(
                 )
             }
         }
-
         // Fixed bottom bar
         Surface(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.background,
-            tonalElevation = 8.dp
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp),
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            tonalElevation = 12.dp,
+            shadowElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                InstantActionsSection()
+                InstantActionsSection(showDndDialog = {showDialog.value=true})
             }
         }
     }
@@ -213,7 +224,9 @@ private fun ScheduleSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -255,7 +268,9 @@ private fun ScheduleSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -288,7 +303,9 @@ private fun ScheduleSection(
 
                 // Start Time Selection
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -365,19 +382,18 @@ private fun ScheduleButton(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-        ,
+            .padding(16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.98f)
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Schedule Summary
             Row(
@@ -505,13 +521,19 @@ private fun ScheduleButton(
 }
 
 @Composable
-private fun InstantActionsSection() {
+private fun InstantActionsSection(showDndDialog: () -> Unit){
     Text(
         text = "Instant Actions",
         style = MaterialTheme.typography.titleMedium,
     )
-    Spacer(Modifier.height(8.dp))
-    MuteOptionButtons()
+    Text(
+        text = "Choose how your phone should be silenced instantly. Only one option active at a time.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+    Spacer(Modifier.height(4.dp))
+    MuteOptionButtons(showDndDialog = showDndDialog)
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -520,6 +542,7 @@ private fun InstantActionsSection() {
 fun MuteOptionButtons(
     modifier: Modifier = Modifier,
     context: Context = LocalContext.current,
+    showDndDialog: () -> Unit = {}
 ) {
     val muteHelper = remember { MuteHelper(context) }
 
@@ -556,7 +579,10 @@ fun MuteOptionButtons(
 
                         when (newState) {
                             "DND" -> {
-                                muteHelper.dndModeOn()
+                                if(!hasNotificationPolicyAccess(context)) {
+                                    showDndDialog()
+                                }
+                                else muteHelper.dndModeOn()
                             }
 
                             "Mute" -> {
@@ -629,28 +655,81 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
     var showRemoveDialog by remember { mutableStateOf(false) }
     var durationToRemove by remember { mutableStateOf<Int?>(null) }
 
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
     ) {
-        options.forEach { duration ->
+        Text(
+            text = "Choose or add how long you want your phone to be muted.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+        ) {
+            options.forEach { duration ->
+                Card(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .combinedClickable(
+                            onClick = { onDurationSelected(duration) },
+                            onLongClick = {
+                                durationToRemove = duration
+                                showRemoveDialog = true
+                            }
+                        ),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (selectedDuration == duration)
+                            MaterialTheme.colorScheme.primaryContainer
+                        else
+                            MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "$duration",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = if (selectedDuration == duration)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "minutes",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (selectedDuration == duration)
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            
+            // Add Custom Duration Button
             Card(
                 modifier = Modifier
                     .width(100.dp)
-                    .combinedClickable(
-                        onClick = { onDurationSelected(duration) },
-                        onLongClick = {
-                            durationToRemove = duration
-                            showRemoveDialog = true
-                        }
-                    ),
+                    .clickable { showDialog = true },
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (selectedDuration == duration) 
-                        MaterialTheme.colorScheme.primaryContainer 
-                    else 
-                        MaterialTheme.colorScheme.surfaceVariant
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 Column(
@@ -660,146 +739,108 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = "$duration",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = if (selectedDuration == duration)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                    Icon(
+                        Icons.Default.AddCircle,
+                        contentDescription = "Add custom duration",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "minutes",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (selectedDuration == duration)
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "Custom",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
         }
-        
-        // Add Custom Duration Button
-        Card(
-            modifier = Modifier
-                .width(100.dp)
-                .clickable { showDialog = true },
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    Icons.Default.AddCircle,
-                    contentDescription = "Add custom duration",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Custom",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            }
-        }
-    }
 
-    // Custom Duration Input Dialog
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { 
-                Text(
-                    "Add Custom Duration",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = newDurationText,
-                        onValueChange = { newDurationText = it },
-                        label = { Text("Enter duration (minutes)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
+        // Custom Duration Input Dialog
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = {
+                    Text(
+                        "Add Custom Duration",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                text = {
+                    Column {
+                        OutlinedTextField(
+                            value = newDurationText,
+                            onValueChange = { newDurationText = it },
+                            label = { Text("Enter duration (minutes)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val newDuration = newDurationText.toIntOrNull()
+                            if (newDuration != null && newDuration > 0 && newDuration !in options) {
+                                options = (options + newDuration).sorted()
+                                newDurationText = ""
+                                showDialog = false
+                            }
+                        },
                         shape = RoundedCornerShape(12.dp)
-                    )
+                    ) {
+                        Text("Add")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDialog = false },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val newDuration = newDurationText.toIntOrNull()
-                        if (newDuration != null && newDuration > 0 && newDuration !in options) {
-                            options = (options + newDuration).sorted()
-                            newDurationText = ""
-                            showDialog = false
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Add")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDialog = false },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
+            )
+        }
 
-    if (showRemoveDialog) {
-        AlertDialog(
-            onDismissRequest = { showRemoveDialog = false },
-            title = { 
-                Text(
-                    "Remove Duration?",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            },
-            text = { 
-                Text(
-                    "Are you sure you want to remove $durationToRemove min?",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        durationToRemove?.let {
-                            options = options.filter { it != durationToRemove }
-                            SharedPrefUtils.saveList(context, options)
-                        }
-                        showRemoveDialog = false
-                    },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Remove")
+        if (showRemoveDialog) {
+            AlertDialog(
+                onDismissRequest = { showRemoveDialog = false },
+                title = {
+                    Text(
+                        "Remove Duration?",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                text = {
+                    Text(
+                        "Are you sure you want to remove $durationToRemove min?",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            durationToRemove?.let {
+                                options = options.filter { it != durationToRemove }
+                                SharedPrefUtils.saveList(context, options)
+                            }
+                            showRemoveDialog = false
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Remove")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showRemoveDialog = false },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showRemoveDialog = false },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
+            )
+        }
     }
 }
 

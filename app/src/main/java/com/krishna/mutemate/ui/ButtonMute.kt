@@ -51,13 +51,28 @@ fun ButtonMute(
         ){
             Icon(
                 imageVector = icon,
-                contentDescription = "Mute",
+                contentDescription = when (title) {
+                    "DND" -> "Enable Do Not Disturb mode. All sounds off except alarms unless customized."
+                    "Mute" -> "Mute all system sounds except alarms and media."
+                    "Vibrate" -> "Enable vibrate-only mode. No sound, phone will vibrate for calls."
+                    else -> title
+                },
                 tint = color
             )
             Text(
                 text =title,
                 style = MaterialTheme.typography.bodyMedium,
                 color = color
+            )
+            Text(
+                text = when (title) {
+                    "DND" -> "Mute all. Only alarms or allowed calls."
+                    "Mute" -> "Silence calls and notifications."
+                    "Vibrate" -> "No sound, only vibrate."
+                    else -> ""
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = color.copy(alpha = 0.7f)
             )
         }
 
