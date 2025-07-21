@@ -1,4 +1,4 @@
-package com.krishna.mutemate.ui
+package com.krishna.mutemate.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

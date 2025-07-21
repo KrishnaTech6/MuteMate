@@ -1,10 +1,7 @@
 package com.krishna.mutemate.ui
 
 import DateTimeSelector
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +53,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,11 +67,17 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
+import com.krishna.mutemate.ui.components.ButtonMute
+import com.krishna.mutemate.ui.components.NoRunningSchedule
+import com.krishna.mutemate.ui.features.QuickMuteGesture
+import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils
 import com.krishna.mutemate.utils.getTimeUntilStart
+import com.krishna.mutemate.utils.hasNotificationPolicyAccess
 import com.krishna.mutemate.utils.isBatteryLow
+import com.krishna.mutemate.utils.requestNotificationPolicyAccess
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -99,9 +103,12 @@ fun MuteScreen(
     var endTime: Date? by remember { mutableStateOf(null) }
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
-    val options by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
+    val muteSettingsManager = remember { MuteSettingsManager(context) }
+    val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
     val showDialog = remember { mutableStateOf(false) }
     val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
+
+    val coroutineScope = rememberCoroutineScope()
     
     val formattedScheduleTime by remember(schedules) {
         mutableStateOf(schedules.sortedBy { getTimeUntilStart(it.startTime) })
@@ -110,6 +117,15 @@ fun MuteScreen(
     fun showToast(msg: String) {
         coroutineScope.launch {
             snackbarHostState.showSnackbar(msg)
+        }
+    }
+    // accessibility services
+    LaunchedEffect(Unit) {
+        val isAccessibilityEnabled = AccessibilityUtils.isAccessibilityServiceEnabled(context)
+        if (isAccessibilityEnabled) {
+            muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, true)
+        } else{
+            muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, false)
         }
     }
 
@@ -161,6 +177,10 @@ fun MuteScreen(
                 onShowToast = { showToast(it) }
             )
             Spacer(modifier = Modifier.height(10.dp))
+            // Quick Mute Feature Card (USP)
+            QuickMuteGesture(coroutineScope, context, muteSettingsManager)
+
+            Spacer(modifier = Modifier.height(10.dp))
             if (showDialog.value) {
                 ShowDndAlert(showDialog, context)
             }
@@ -168,7 +188,8 @@ fun MuteScreen(
                 NoRunningSchedule(
                     modifier = Modifier
                         .height(160.dp)
-                        .padding(vertical = 24.dp))
+                        .padding(vertical = 24.dp)
+                )
             } else {
                 ScheduleList(
                     schedule = formattedScheduleTime,
@@ -579,10 +600,9 @@ fun MuteOptionButtons(
 
                         when (newState) {
                             "DND" -> {
-                                if(!hasNotificationPolicyAccess(context)) {
+                                if (!hasNotificationPolicyAccess(context)) {
                                     showDndDialog()
-                                }
-                                else muteHelper.dndModeOn()
+                                } else muteHelper.dndModeOn()
                             }
 
                             "Mute" -> {
@@ -842,15 +862,4 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
             )
         }
     }
-}
-
-fun hasNotificationPolicyAccess(context: Context): Boolean {
-    val notificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    return notificationManager.isNotificationPolicyAccessGranted
-}
-
-fun requestNotificationPolicyAccess(context: Context) {
-    val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
-    context.startActivity(intent)
 }

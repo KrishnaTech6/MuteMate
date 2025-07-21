@@ -1,7 +1,10 @@
 package com.krishna.mutemate.utils
 
+import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.os.BatteryManager
+import android.provider.Settings
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -55,4 +58,15 @@ fun cancelMuteTasks(context: Context, schedule: MuteSchedule) {
     else
         MuteHelper(context).unmutePhone()
     workManager.cancelUniqueWork("UnMuteTask_${schedule.id}")
+}
+
+fun hasNotificationPolicyAccess(context: Context): Boolean {
+    val notificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    return notificationManager.isNotificationPolicyAccessGranted
+}
+
+fun requestNotificationPolicyAccess(context: Context) {
+    val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+    context.startActivity(intent)
 }

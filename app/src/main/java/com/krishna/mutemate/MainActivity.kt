@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -53,7 +54,7 @@ class MainActivity : ComponentActivity() {
             MuteMateTheme {
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
-                var showBottomSheet by remember { mutableStateOf(false) }
+                var showSettingsScreen by remember { mutableStateOf(false) }
                 val bottomSheetState = rememberModalBottomSheetState()
 
                 Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
                                     null,
                                     Modifier
                                         .padding(4.dp)
-                                        .clickable { showBottomSheet = true })
+                                        .clickable { showSettingsScreen = true })
                             }
                         )
                     }) { padding ->
@@ -77,13 +78,14 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                if (showBottomSheet) {
+                if (showSettingsScreen) {
                     SilentModeSettingsScreen(
-                        onDismissRequest = { showBottomSheet = false },
-                        bottomSheetState = bottomSheetState,
                         context = this,
                         modifier = Modifier.safeContentPadding()
                     )
+                    BackHandler {
+                        showSettingsScreen = false
+                    }
                 }
             }
         }
