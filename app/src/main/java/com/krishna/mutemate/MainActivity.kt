@@ -20,7 +20,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,8 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.krishna.mutemate.ui.MuteScreen
-import com.krishna.mutemate.ui.SilentModeSettingsScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.krishna.mutemate.ui.BottomNavigationBar
+import com.krishna.mutemate.ui.Destination
+import com.krishna.mutemate.ui.NavHostApp
+import com.krishna.mutemate.ui.screens.SilentModeSettingsScreen
 import com.krishna.mutemate.ui.TopAppBarTitle
 import com.krishna.mutemate.ui.theme.MuteMateTheme
 import com.krishna.mutemate.utils.AccessibilityUtils
@@ -55,26 +58,33 @@ class MainActivity : ComponentActivity() {
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
                 var showSettingsScreen by remember { mutableStateOf(false) }
-                val bottomSheetState = rememberModalBottomSheetState()
+                val navController = rememberNavController()
+
+                // navigation management
+                val navBackSTackEntry by navController.currentBackStackEntryAsState()
+                val currentDestination = navBackSTackEntry?.destination?.route
+                val selectedDestination = Destination.entries.indexOfFirst { it.route == currentDestination }.coerceAtLeast(0)
+
 
                 Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         TopAppBar(
-                            title = { TopAppBarTitle() },
+                            title = { TopAppBarTitle(navController, selectedDestination) },
                             actions = {
-                                Icon(
-                                    Icons.Default.MoreVert,
-                                    null,
-                                    Modifier
-                                        .padding(4.dp)
+                                Icon(Icons.Default.MoreVert, null,
+                                    Modifier.padding(4.dp)
                                         .clickable { showSettingsScreen = true })
                             }
                         )
+                    },
+                    bottomBar = {
+                        BottomNavigationBar(navController, selectedDestination)
                     }) { padding ->
-                    MuteScreen(
+                    NavHostApp(
+                        navController,
                         snackbarHostState,
                         coroutineScope,
-                        modifier = Modifier.padding(padding)
+                        Modifier.padding(padding),
                     )
                 }
 

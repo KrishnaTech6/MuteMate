@@ -1,4 +1,4 @@
-package com.krishna.mutemate.ui
+package com.krishna.mutemate.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.background

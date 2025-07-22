@@ -2,6 +2,7 @@ package com.krishna.mutemate.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -17,7 +18,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 @Preview(showBackground = true)
-fun NoRunningSchedule(modifier: Modifier = Modifier) {
+fun NoRunningSchedule(modifier: Modifier = Modifier.fillMaxSize()) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier, verticalArrangement = Arrangement.Center ){
         Icon(
             imageVector = Icons.Default.CalendarToday,
@@ -31,7 +32,5 @@ fun NoRunningSchedule(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.primary.copy(0.6f)
 
         )
-
     }
-
 }

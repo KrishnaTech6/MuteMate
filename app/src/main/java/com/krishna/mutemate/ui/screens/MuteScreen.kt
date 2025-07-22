@@ -1,4 +1,4 @@
-package com.krishna.mutemate.ui
+package com.krishna.mutemate.ui.screens
 
 import DateTimeSelector
 import android.content.Context
@@ -36,13 +36,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -53,7 +51,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,17 +61,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.ui.components.ButtonMute
-import com.krishna.mutemate.ui.components.NoRunningSchedule
 import com.krishna.mutemate.ui.features.QuickMuteGesture
 import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils
-import com.krishna.mutemate.utils.getTimeUntilStart
 import com.krishna.mutemate.utils.hasNotificationPolicyAccess
 import com.krishna.mutemate.utils.isBatteryLow
 import com.krishna.mutemate.utils.requestNotificationPolicyAccess
@@ -93,11 +88,12 @@ import java.util.concurrent.TimeUnit
  */
 @Composable
 fun MuteScreen(
+    navController: NavController,
+    viewModel: MuteViewModel,
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier,
 ) {
-    val viewModel: MuteViewModel = hiltViewModel()
     val context = LocalContext.current
     var startTime: Date? by remember { mutableStateOf(null) }
     var endTime: Date? by remember { mutableStateOf(null) }
@@ -106,12 +102,9 @@ fun MuteScreen(
     val muteSettingsManager = remember { MuteSettingsManager(context) }
     val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
     val showDialog = remember { mutableStateOf(false) }
-    val schedules by viewModel.allSchedules.collectAsState(initial = emptyList())
 
-    val coroutineScope = rememberCoroutineScope()
-    
-    val formattedScheduleTime by remember(schedules) {
-        mutableStateOf(schedules.sortedBy { getTimeUntilStart(it.startTime) })
+    if (showDialog.value) {
+        ShowDndAlert(showDialog, context)
     }
 
     fun showToast(msg: String) {
@@ -135,8 +128,7 @@ fun MuteScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                ,
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(12.dp))
@@ -152,13 +144,7 @@ fun MuteScreen(
                 coroutineScope = coroutineScope,
                 snackbarHostState = snackbarHostState
             )
-            Spacer(modifier = Modifier.height(28.dp))
-            // Divider between Schedule and Set Schedule
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
             ScheduleButton(
                 context = context,
                 customTimeSelected = customTimeSelected,
@@ -179,45 +165,26 @@ fun MuteScreen(
             Spacer(modifier = Modifier.height(10.dp))
             // Quick Mute Feature Card (USP)
             QuickMuteGesture(coroutineScope, context, muteSettingsManager)
-
             Spacer(modifier = Modifier.height(10.dp))
-            if (showDialog.value) {
-                ShowDndAlert(showDialog, context)
-            }
-            if (formattedScheduleTime.isEmpty()) {
-                NoRunningSchedule(
-                    modifier = Modifier
-                        .height(160.dp)
-                        .padding(vertical = 24.dp)
-                )
-            } else {
-                ScheduleList(
-                    schedule = formattedScheduleTime,
-                    onRemove = { index ->
-                        viewModel.deleteSchedule(formattedScheduleTime[index])
-                        showToast("Schedule deleted")
-                    }
-                )
-            }
         }
-        // Fixed bottom bar
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            tonalElevation = 12.dp,
-            shadowElevation = 6.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                InstantActionsSection(showDndDialog = {showDialog.value=true})
-            }
-        }
+//        // Fixed bottom bar
+//        Surface(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(top = 10.dp),
+//            color = MaterialTheme.colorScheme.surfaceContainer,
+//            tonalElevation = 12.dp,
+//            shadowElevation = 6.dp
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(18.dp),
+//                horizontalAlignment = Alignment.CenterHorizontally
+//            ) {
+//                InstantActionsSection(showDndDialog = {showDialog.value=true})
+//            }
+//        }
     }
 }
 
@@ -240,148 +207,184 @@ private fun ScheduleSection(
     ) {
         // Quick Schedule Section
         if (!customTimeSelected) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Quick Schedule",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = "Select a preset duration",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(
-                        onClick = { onCustomTimeSelectedChange(true) },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = "Switch to custom time",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-                DurationSelection(
-                    selectedDuration = selectedDuration,
-                    onDurationSelected = onDurationSelected,
-                )
-            }
+            QuickScheduleSelector(
+                onCustomTimeSelectedChange,
+                selectedDuration,
+                onDurationSelected
+            )
         } else {
             // Custom Time Section
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            CustomTimeSelector(
+                onCustomTimeSelectedChange,
+                coroutineScope,
+                snackbarHostState,
+                startTime,
+                onStartTimeSelected,
+                endTime,
+                onEndTimeSelected
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickScheduleSelector(
+    onCustomTimeSelectedChange: (Boolean) -> Unit,
+    selectedDuration: Int,
+    onDurationSelected: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Quick Schedule",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+                Text(
+                    text = "Select a preset duration",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = { onCustomTimeSelectedChange(true) },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Custom Schedule",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                        Text(
-                            text = "Set your own start and end time",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    IconButton(
-                        onClick = { onCustomTimeSelectedChange(false) },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Timer,
-                            contentDescription = "Switch to quick schedule",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.Schedule,
+                    contentDescription = "Switch to custom time",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+        DurationSelection(
+            selectedDuration = selectedDuration,
+            onDurationSelected = onDurationSelected,
+        )
+    }
+}
 
-                // Start Time Selection
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+@Composable
+private fun CustomTimeSelector(
+    onCustomTimeSelectedChange: (Boolean) -> Unit,
+    coroutineScope: CoroutineScope,
+    snackbarHostState: SnackbarHostState,
+    startTime: Date?,
+    onStartTimeSelected: (Date?) -> Unit,
+    endTime: Date?,
+    onEndTimeSelected: (Date?) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Custom Schedule",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
                     )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "Start Time",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        DateTimeSelector(
-                            coroutineScope = coroutineScope,
-                            snackbarHostState = snackbarHostState,
-                            label = "Select start time",
-                            dateTime = startTime,
-                            onDateTimeSelected = onStartTimeSelected
-                        )
-                    }
-                }
+                )
+                Text(
+                    text = "Set your own start and end time",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            IconButton(
+                onClick = { onCustomTimeSelectedChange(false) },
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Timer,
+                    contentDescription = "Switch to quick schedule",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
 
-                // End Time Selection
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "End Time",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        DateTimeSelector(
-                            coroutineScope = coroutineScope,
-                            snackbarHostState = snackbarHostState,
-                            label = "Select end time",
-                            dateTime = endTime,
-                            minDateTime = startTime,
-                            onDateTimeSelected = onEndTimeSelected
-                        )
-                    }
-                }
+        // Start Time Selection
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Start Time",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DateTimeSelector(
+                    coroutineScope = coroutineScope,
+                    snackbarHostState = snackbarHostState,
+                    label = "Select start time",
+                    dateTime = startTime,
+                    onDateTimeSelected = onStartTimeSelected
+                )
+            }
+        }
+
+        // End Time Selection
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "End Time",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                DateTimeSelector(
+                    coroutineScope = coroutineScope,
+                    snackbarHostState = snackbarHostState,
+                    label = "Select end time",
+                    dateTime = endTime,
+                    minDateTime = startTime,
+                    onDateTimeSelected = onEndTimeSelected
+                )
             }
         }
     }

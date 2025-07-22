@@ -11,11 +11,13 @@ import com.krishna.mutemate.utils.calculateDelay
 import com.krishna.mutemate.utils.cancelMuteTasks
 import com.krishna.mutemate.utils.scheduleWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class MuteViewModel @Inject constructor(
@@ -24,7 +26,9 @@ class MuteViewModel @Inject constructor(
     private val workManager: WorkManager
 ) : ViewModel(){
 
-    val allSchedules: Flow<List<MuteSchedule>> = dao.getSchedules()
+    val allSchedules: Flow<List<MuteSchedule>> =
+        dao.getSchedules()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
