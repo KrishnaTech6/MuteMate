@@ -33,13 +33,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.utils.MuteSettingsManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: Modifier = Modifier) {
+fun SettingsScreen(navController: NavHostController, context: Context = LocalContext.current, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
     ) {
@@ -52,14 +53,6 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Text(
-                text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-            
             Text(
                 text = "Sound Profile Settings",
                 style = MaterialTheme.typography.titleMedium,
@@ -157,8 +150,10 @@ fun SilentModeSettingsScreen(context: Context = LocalContext.current, modifier: 
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f), 
-                                    shape = RoundedCornerShape(8.dp))
+                                .background(
+                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
                                 .padding(8.dp)
                         ) {
                             Text(

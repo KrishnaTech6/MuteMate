@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -102,6 +103,7 @@ fun MuteScreen(
     val muteSettingsManager = remember { MuteSettingsManager(context) }
     val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
     val showDialog = remember { mutableStateOf(false) }
+    val scheduleList by viewModel.allSchedules.collectAsState(emptyList())
 
     if (showDialog.value) {
         ShowDndAlert(showDialog, context)
@@ -131,7 +133,15 @@ fun MuteScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(12.dp))
+            if(!scheduleList.isEmpty() && scheduleList.find{ it.startTime==null } != null){
+                Box(Modifier.padding(horizontal = 16.dp)) {
+                    ScheduleItem(schedule = scheduleList.find { it.startTime == null }!!, true) {
+                        viewModel.deleteSchedule(it)
+                        showToast("Schedule removed")
+                    }
+                }
+            }
+
             ScheduleSection(
                 customTimeSelected = customTimeSelected,
                 selectedDuration = selectedDuration.intValue,

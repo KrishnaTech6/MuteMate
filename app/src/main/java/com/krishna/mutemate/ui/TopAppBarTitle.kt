@@ -49,6 +49,9 @@ fun TopAppBarTitle(navController: NavHostController, selectedDestination: Int) {
         Destination.MAP.ordinal ->{
             TopTitle(navController,"Select Location to Mute")
         }
+        Destination.SETTINGS.ordinal ->{
+            TopTitle(navController,"Settings")
+        }
     }
 }
 

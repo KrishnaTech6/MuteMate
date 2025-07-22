@@ -5,28 +5,20 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -34,11 +26,12 @@ import androidx.navigation.compose.rememberNavController
 import com.krishna.mutemate.ui.BottomNavigationBar
 import com.krishna.mutemate.ui.Destination
 import com.krishna.mutemate.ui.NavHostApp
-import com.krishna.mutemate.ui.screens.SilentModeSettingsScreen
 import com.krishna.mutemate.ui.TopAppBarTitle
+import com.krishna.mutemate.ui.screens.OnBoardingScreen
 import com.krishna.mutemate.ui.theme.MuteMateTheme
 import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteSettingsManager
+import com.krishna.mutemate.utils.MuteSettingsManager.Companion.IS_ONBOARDING_COMPLETED
 import com.krishna.mutemate.utils.NotificationHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -57,44 +50,42 @@ class MainActivity : ComponentActivity() {
             MuteMateTheme {
                 val snackbarHostState = remember { SnackbarHostState() }
                 val coroutineScope = rememberCoroutineScope()
-                var showSettingsScreen by remember { mutableStateOf(false) }
                 val navController = rememberNavController()
 
                 // navigation management
                 val navBackSTackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackSTackEntry?.destination?.route
-                val selectedDestination = Destination.entries.indexOfFirst { it.route == currentDestination }.coerceAtLeast(0)
+                val selectedDestination =
+                    Destination.entries.indexOfFirst { it.route == currentDestination }
+                        .coerceAtLeast(0)
+                val settings = MuteSettingsManager(this)
+                val isOnboardingDone by settings.isOnboardingCompleted.collectAsState(initial = false)
 
-
-                Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
-                    topBar = {
-                        TopAppBar(
-                            title = { TopAppBarTitle(navController, selectedDestination) },
-                            actions = {
-                                Icon(Icons.Default.MoreVert, null,
-                                    Modifier.padding(4.dp)
-                                        .clickable { showSettingsScreen = true })
+                if (!isOnboardingDone) {
+                    OnBoardingScreen(
+                        onGetStarted = {
+                            coroutineScope.launch {
+                                settings.saveSetting(IS_ONBOARDING_COMPLETED, true)
                             }
+                        }
+                    )
+                } else {
+                    Scaffold(
+                        snackbarHost = { SnackbarHost(snackbarHostState) },
+                        topBar = {
+                            TopAppBar(
+                                title = { TopAppBarTitle(navController, selectedDestination) },
+                            )
+                        },
+                        bottomBar = {
+                            BottomNavigationBar(navController, selectedDestination)
+                        }) { padding ->
+                        NavHostApp(
+                            navController,
+                            snackbarHostState,
+                            coroutineScope,
+                            Modifier.padding(padding),
                         )
-                    },
-                    bottomBar = {
-                        BottomNavigationBar(navController, selectedDestination)
-                    }) { padding ->
-                    NavHostApp(
-                        navController,
-                        snackbarHostState,
-                        coroutineScope,
-                        Modifier.padding(padding),
-                    )
-                }
-
-                if (showSettingsScreen) {
-                    SilentModeSettingsScreen(
-                        context = this,
-                        modifier = Modifier.safeContentPadding()
-                    )
-                    BackHandler {
-                        showSettingsScreen = false
                     }
                 }
             }

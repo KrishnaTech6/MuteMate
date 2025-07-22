@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import com.krishna.mutemate.ui.screens.MapScreen
 import com.krishna.mutemate.ui.screens.MuteScreen
 import com.krishna.mutemate.ui.screens.ScheduleListScreen
+import com.krishna.mutemate.ui.screens.SettingsScreen
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -42,7 +43,8 @@ fun NavHostApp(
                         modifier = modifier
                     )
 
-                    Destination.MAP -> MapScreen()
+                    Destination.MAP -> MapScreen(modifier = modifier)
+                    Destination.SETTINGS -> SettingsScreen(navController, modifier = modifier)
                 }
             }
         }
