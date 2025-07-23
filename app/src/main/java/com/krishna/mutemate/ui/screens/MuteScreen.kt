@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.krishna.mutemate.ui.screens
 
 import DateTimeSelector
@@ -37,6 +39,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +69,7 @@ import androidx.navigation.NavController
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.ui.components.ButtonMute
+import com.krishna.mutemate.ui.components.MuteOptionsDropDown
 import com.krishna.mutemate.ui.features.QuickMuteGesture
 import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
@@ -154,6 +158,7 @@ fun MuteScreen(
                 coroutineScope = coroutineScope,
                 snackbarHostState = snackbarHostState
             )
+            MuteOptionsDropDown(context)
             Spacer(modifier = Modifier.height(16.dp))
             ScheduleButton(
                 context = context,
