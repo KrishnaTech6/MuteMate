@@ -157,7 +157,7 @@ fun MuteScreen(
                 coroutineScope = coroutineScope,
                 snackbarHostState = snackbarHostState
             )
-            MuteOptionsDropDown(context)
+            MuteOptionsDropDown(context,Modifier.padding(16.dp))
             ScheduleButton(
                 context = context,
                 customTimeSelected = customTimeSelected,

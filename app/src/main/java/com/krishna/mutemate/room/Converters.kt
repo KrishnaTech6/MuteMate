@@ -1,6 +1,7 @@
 package com.krishna.mutemate.room
 
 import androidx.room.TypeConverter
+import com.google.android.gms.maps.model.LatLng
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.krishna.mutemate.model.AllMuteOptions
@@ -29,5 +30,16 @@ class Converters {
     @TypeConverter
     fun dateToTimestamp(date: Date?): Long? {
         return date?.time
+    }
+
+    @TypeConverter
+    fun toLatLong(latLng: String): LatLng {
+        val type = object: TypeToken<LatLng>(){}.type
+        return gson.fromJson(latLng, type)
+    }
+
+    @TypeConverter
+    fun fromLatLong(value: LatLng): String {
+        return gson.toJson(value)
     }
 }

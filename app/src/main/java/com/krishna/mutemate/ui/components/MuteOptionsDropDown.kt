@@ -47,8 +47,6 @@ fun MuteOptionsDropDown(
     modifier: Modifier = Modifier
 ) {
     Surface(modifier = modifier
-        .padding(horizontal = 16.dp)
-        .background(color = Color.White)
         .border(1.dp, Color.Black.copy(0.3f), RoundedCornerShape(16.dp))
     ) {
         val muteSettingsManager = remember { MuteSettingsManager(context) }

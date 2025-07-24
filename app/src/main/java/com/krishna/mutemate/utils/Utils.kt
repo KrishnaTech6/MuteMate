@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.os.BatteryManager
 import android.provider.Settings
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.work.Constraints
@@ -15,6 +16,10 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.FetchPlaceRequest
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.worker.MuteWorker
 import com.krishna.mutemate.worker.UnmuteWorker
@@ -86,3 +91,23 @@ fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescri
     vectorDrawable.draw(canvas)
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }
+
+fun fetchPlaceDetails(
+    placeId: String,
+    context: Context,
+    placesClient: PlacesClient,
+    onLocationReady: (LatLng) -> Unit
+) {
+    val placeFields = listOf(Place.Field.LAT_LNG)
+    val request = FetchPlaceRequest.builder(placeId, placeFields).build()
+
+    placesClient.fetchPlace(request)
+        .addOnSuccessListener { response ->
+            val place = response.place
+            place.latLng?.let { onLocationReady(it) }
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Unable to get location", Toast.LENGTH_SHORT).show()
+        }
+}
+
