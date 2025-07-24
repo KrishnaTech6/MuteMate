@@ -33,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -59,10 +61,15 @@ import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.krishna.mutemate.R
+import com.krishna.mutemate.model.AllMuteOptions
+import com.krishna.mutemate.model.LocationMute
 import com.krishna.mutemate.ui.components.MuteOptionsDropDown
+import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils.getCurrentLocation
 import com.krishna.mutemate.utils.SharedPrefUtils.putCurrentLocation
 import com.krishna.mutemate.utils.fetchPlaceDetails
+import com.krishna.mutemate.viewmodel.MapViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -73,10 +80,12 @@ import kotlinx.coroutines.launch
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun MapScreen(modifier: Modifier = Modifier){
+fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewModel()){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
+    val options by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
+
 
     val locationPermission = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
     var markerPosition by remember { mutableStateOf<LatLng?>( getCurrentLocation(context)) }
@@ -99,6 +108,9 @@ fun MapScreen(modifier: Modifier = Modifier){
 
 
     LaunchedEffect(Unit) {
+        if(!locationPermission.status.isGranted) {
+            locationPermission.launchPermissionRequest()
+        }
         searchQueryFlow
             .debounce(300) // 300 ms debounce
             .filter { it.isNotBlank() }
@@ -127,6 +139,7 @@ fun MapScreen(modifier: Modifier = Modifier){
             properties = MapProperties(isMyLocationEnabled = locationPermission.status.isGranted),
             onMapClick = { latLng ->
                 showMuteDialog = true
+                markerPosition = latLng
             }
         ) {
             markerPosition?.let { position ->
@@ -190,12 +203,18 @@ fun MapScreen(modifier: Modifier = Modifier){
                                 .fillMaxWidth()
                                 .clickable {
                                     Log.d("Prediction", prediction.toString())
-                                    // Fetch details and move camera
+                                    // Fetch details
                                     fetchPlaceDetails(prediction.placeId, context, placesClient) { latLng ->
                                         scope.launch {
                                             markerPosition = latLng
+                                            cameraPositionState.animate(
+                                                CameraUpdateFactory.newLatLngZoom(
+                                                    latLng,
+                                                    16f
+                                                )
+                                            )
                                             suggestions.value = emptyList()
-                                            searchQuery = prediction.getFullText(null).toString()
+                                            searchQuery = prediction.getPrimaryText(null).toString()
                                         }
                                     }
                                 }
@@ -285,7 +304,16 @@ fun MapScreen(modifier: Modifier = Modifier){
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = { showMuteDialog = false }) {
+                    TextButton(onClick = { showMuteDialog = false
+                        val muteLocation = LocationMute(
+                            muteOptions = options,
+                            latLng = markerPosition,
+                            radius = radius.value,
+                            title = "Home",
+                            markerType = R.drawable.ic_home,
+                        )
+                        viewmodel.insertLocationMute(muteLocation)
+                    }) {
                         Text("OK")
                     }
                 }

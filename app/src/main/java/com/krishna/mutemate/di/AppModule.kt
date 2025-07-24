@@ -33,6 +33,10 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideLocationMuteDao(db: AppDatabase) = db.locationMuteDao()
+
+    @Provides
+    @Singleton
     fun providesWorkManager(@ApplicationContext context: Context): WorkManager{
         return WorkManager.getInstance(context)
     }
