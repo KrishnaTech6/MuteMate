@@ -3,13 +3,18 @@ package com.krishna.mutemate.utils
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Canvas
 import android.os.BatteryManager
 import android.provider.Settings
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.createBitmap
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.worker.MuteWorker
 import com.krishna.mutemate.worker.UnmuteWorker
@@ -69,4 +74,15 @@ fun hasNotificationPolicyAccess(context: Context): Boolean {
 fun requestNotificationPolicyAccess(context: Context) {
     val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
     context.startActivity(intent)
+}
+
+fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {
+    val vectorDrawable = ContextCompat.getDrawable(context, vectorResId)!!
+    vectorDrawable.setBounds(
+        0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight
+    )
+    val bitmap = createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
+    val canvas = Canvas(bitmap)
+    vectorDrawable.draw(canvas)
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

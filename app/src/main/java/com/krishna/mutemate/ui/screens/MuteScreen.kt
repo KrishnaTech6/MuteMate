@@ -129,12 +129,8 @@ fun MuteScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         if (!scheduleList.isEmpty() && scheduleList.find { getTimeUntilStart(startTime) <= 0 } != null) {
             Box(Modifier.padding(horizontal = 8.dp)) {
                 ScheduleItem(schedule = scheduleList.find { it.startTime == null }!!, true) {
@@ -143,40 +139,46 @@ fun MuteScreen(
                 }
             }
         }
-        ScheduleSection(
-            customTimeSelected = customTimeSelected,
-            selectedDuration = selectedDuration.intValue,
-            startTime = startTime,
-            endTime = endTime,
-            onCustomTimeSelectedChange = { customTimeSelected = it },
-            onDurationSelected = { selectedDuration.intValue = it },
-            onStartTimeSelected = { startTime = it },
-            onEndTimeSelected = { endTime = it },
-            coroutineScope = coroutineScope,
-            snackbarHostState = snackbarHostState
-        )
-        MuteOptionsDropDown(context)
-        ScheduleButton(
-            context = context,
-            customTimeSelected = customTimeSelected,
-            selectedDuration = selectedDuration.intValue,
-            startTime = startTime,
-            endTime = endTime,
-            isDnd = options.isDnd,
-            isVibrationMode = options.isVibrate,
-            onScheduleAdd = { schedule ->
-                viewModel.addSchedule(schedule)
-                showToast("Schedule added")
-                endTime = null
-                startTime = null
-            },
-            onShowDialog = { showDialog.value = true },
-            onShowToast = { showToast(it) }
-        )
-        Spacer(modifier = Modifier.height(10.dp))
-        // Quick Mute Feature Card (USP)
-        QuickMuteGesture(coroutineScope, context, muteSettingsManager)
-        Spacer(modifier = Modifier.height(10.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            ScheduleSection(
+                customTimeSelected = customTimeSelected,
+                selectedDuration = selectedDuration.intValue,
+                startTime = startTime,
+                endTime = endTime,
+                onCustomTimeSelectedChange = { customTimeSelected = it },
+                onDurationSelected = { selectedDuration.intValue = it },
+                onStartTimeSelected = { startTime = it },
+                onEndTimeSelected = { endTime = it },
+                coroutineScope = coroutineScope,
+                snackbarHostState = snackbarHostState
+            )
+            MuteOptionsDropDown(context)
+            ScheduleButton(
+                context = context,
+                customTimeSelected = customTimeSelected,
+                selectedDuration = selectedDuration.intValue,
+                startTime = startTime,
+                endTime = endTime,
+                isDnd = options.isDnd,
+                isVibrationMode = options.isVibrate,
+                onScheduleAdd = { schedule ->
+                    viewModel.addSchedule(schedule)
+                    showToast("Schedule added")
+                    endTime = null
+                    startTime = null
+                },
+                onShowDialog = { showDialog.value = true },
+                onShowToast = { showToast(it) }
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            // Quick Mute Feature Card (USP)
+            QuickMuteGesture(coroutineScope, context, muteSettingsManager)
+            Spacer(modifier = Modifier.height(10.dp))
 //        // Fixed bottom bar
 //        Surface(
 //            modifier = Modifier
@@ -195,6 +197,9 @@ fun MuteScreen(
 //                InstantActionsSection(showDndDialog = {showDialog.value=true})
 //            }
 //        }
+        }
+
+
     }
 }
 
