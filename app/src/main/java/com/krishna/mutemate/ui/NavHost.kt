@@ -32,19 +32,18 @@ fun NavHostApp(
                     Destination.HOME -> MuteScreen(
                         navController = navController,
                         viewModel = viewModel,
-                        snackbarHostState,
-                        coroutineScope,
+                        snackbarHostState = snackbarHostState,
+                        coroutineScope = coroutineScope,
                         modifier = modifier,
                     )
                     Destination.LIST -> ScheduleListScreen(
                         viewModel = viewModel,
-                        snackbarHostState,
-                        coroutineScope,
+                        snackbarHostState = snackbarHostState,
+                        coroutineScope = coroutineScope,
                         modifier = modifier
                     )
-
                     Destination.MAP -> MapScreen(modifier = modifier)
-                    Destination.SETTINGS -> SettingsScreen(navController, modifier = modifier)
+                    Destination.SETTINGS -> SettingsScreen(navController= navController, modifier = modifier)
                 }
             }
         }

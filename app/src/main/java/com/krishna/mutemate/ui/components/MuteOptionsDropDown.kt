@@ -2,6 +2,7 @@ package com.krishna.mutemate.ui.components
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,7 +46,11 @@ fun MuteOptionsDropDown(
     context: Context = LocalContext.current,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier.padding(horizontal = 16.dp).background(color = Color.White)) {
+    Surface(modifier = modifier
+        .padding(horizontal = 16.dp)
+        .background(color = Color.White)
+        .border(1.dp, Color.Black.copy(0.3f), RoundedCornerShape(16.dp))
+    ) {
         val muteSettingsManager = remember { MuteSettingsManager(context) }
         val coroutineScope = rememberCoroutineScope()
         val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
@@ -59,7 +64,9 @@ fun MuteOptionsDropDown(
             ExpandableCard(
                 title = title,
                 expanded = soundProfileExpanded,
-                onExpandChanged = { soundProfileExpanded = it }
+                onExpandChanged = { soundProfileExpanded = it },
+                modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             ) {
                 RowWithSwitch(
                     title = "DND Mode",
@@ -97,7 +104,8 @@ fun MuteOptionsDropDown(
                 ExpandableCard(
                     title = "Sound Customization",
                     expanded = soundCustomizationExpanded.value,
-                    onExpandChanged = { soundCustomizationExpanded.value = it }
+                    onExpandChanged = { soundCustomizationExpanded.value = it },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                 ) {
                     if (options.isDnd || options.isVibrate) {
                         Box(
@@ -184,12 +192,11 @@ fun ExpandableCard(
     title: String,
     expanded: Boolean,
     onExpandChanged: (Boolean) -> Unit,
-    content: @Composable () -> Unit
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column {
@@ -222,9 +229,9 @@ fun ExpandableCard(
 }
 
 @Composable
-fun RowWithSwitch(title: String, checked: Boolean, enabled: Boolean = true, onCheckedChange: (Boolean) -> Unit) {
+fun RowWithSwitch(title: String, checked: Boolean, enabled: Boolean = true, modifier: Modifier = Modifier , onCheckedChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

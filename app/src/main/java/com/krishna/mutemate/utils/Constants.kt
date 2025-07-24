@@ -12,3 +12,4 @@ const val CHANNEL_ID = "mute_schedule_channel"
 
 const val PREF_NAME = "MyPrefs"
 const val KEY_LIST = "my_list"
+const val IS_ONBOARDING_DONE = "onboarding_done"

@@ -75,6 +75,7 @@ import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils
+import com.krishna.mutemate.utils.getTimeUntilStart
 import com.krishna.mutemate.utils.hasNotificationPolicyAccess
 import com.krishna.mutemate.utils.isBatteryLow
 import com.krishna.mutemate.utils.requestNotificationPolicyAccess
@@ -123,65 +124,59 @@ fun MuteScreen(
         val isAccessibilityEnabled = AccessibilityUtils.isAccessibilityServiceEnabled(context)
         if (isAccessibilityEnabled) {
             muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, true)
-        } else{
+        } else {
             muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, false)
         }
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // Scrollable content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if(!scheduleList.isEmpty() && scheduleList.find{ it.startTime==null } != null){
-                Box(Modifier.padding(horizontal = 16.dp)) {
-                    ScheduleItem(schedule = scheduleList.find { it.startTime == null }!!, true) {
-                        viewModel.deleteSchedule(it)
-                        showToast("Schedule removed")
-                    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (!scheduleList.isEmpty() && scheduleList.find { getTimeUntilStart(startTime) <= 0 } != null) {
+            Box(Modifier.padding(horizontal = 8.dp)) {
+                ScheduleItem(schedule = scheduleList.find { it.startTime == null }!!, true) {
+                    viewModel.deleteSchedule(it)
+                    showToast("Schedule removed")
                 }
             }
-
-            ScheduleSection(
-                customTimeSelected = customTimeSelected,
-                selectedDuration = selectedDuration.intValue,
-                startTime = startTime,
-                endTime = endTime,
-                onCustomTimeSelectedChange = { customTimeSelected = it },
-                onDurationSelected = { selectedDuration.intValue = it },
-                onStartTimeSelected = { startTime = it },
-                onEndTimeSelected = { endTime = it },
-                coroutineScope = coroutineScope,
-                snackbarHostState = snackbarHostState
-            )
-            MuteOptionsDropDown(context)
-            Spacer(modifier = Modifier.height(16.dp))
-            ScheduleButton(
-                context = context,
-                customTimeSelected = customTimeSelected,
-                selectedDuration = selectedDuration.intValue,
-                startTime = startTime,
-                endTime = endTime,
-                isDnd = options.isDnd,
-                isVibrationMode = options.isVibrate,
-                onScheduleAdd = { schedule ->
-                    viewModel.addSchedule(schedule)
-                    showToast("Schedule added")
-                    endTime = null
-                    startTime = null
-                },
-                onShowDialog = { showDialog.value = true },
-                onShowToast = { showToast(it) }
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            // Quick Mute Feature Card (USP)
-            QuickMuteGesture(coroutineScope, context, muteSettingsManager)
-            Spacer(modifier = Modifier.height(10.dp))
         }
+        ScheduleSection(
+            customTimeSelected = customTimeSelected,
+            selectedDuration = selectedDuration.intValue,
+            startTime = startTime,
+            endTime = endTime,
+            onCustomTimeSelectedChange = { customTimeSelected = it },
+            onDurationSelected = { selectedDuration.intValue = it },
+            onStartTimeSelected = { startTime = it },
+            onEndTimeSelected = { endTime = it },
+            coroutineScope = coroutineScope,
+            snackbarHostState = snackbarHostState
+        )
+        MuteOptionsDropDown(context)
+        ScheduleButton(
+            context = context,
+            customTimeSelected = customTimeSelected,
+            selectedDuration = selectedDuration.intValue,
+            startTime = startTime,
+            endTime = endTime,
+            isDnd = options.isDnd,
+            isVibrationMode = options.isVibrate,
+            onScheduleAdd = { schedule ->
+                viewModel.addSchedule(schedule)
+                showToast("Schedule added")
+                endTime = null
+                startTime = null
+            },
+            onShowDialog = { showDialog.value = true },
+            onShowToast = { showToast(it) }
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        // Quick Mute Feature Card (USP)
+        QuickMuteGesture(coroutineScope, context, muteSettingsManager)
+        Spacer(modifier = Modifier.height(10.dp))
 //        // Fixed bottom bar
 //        Surface(
 //            modifier = Modifier
@@ -217,7 +212,9 @@ private fun ScheduleSection(
     snackbarHostState: SnackbarHostState
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Quick Schedule Section
@@ -517,7 +514,11 @@ private fun ScheduleButton(
                         (endTime == null && customTimeSelected) -> onShowToast("Please select start and end time")
                         else -> {
                             val finalEndTime = if (!customTimeSelected) {
-                                Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(selectedDuration.toLong()))
+                                Date(
+                                    System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(
+                                        selectedDuration.toLong()
+                                    )
+                                )
                             } else endTime
 
                             onScheduleAdd(
@@ -560,7 +561,7 @@ private fun ScheduleButton(
 }
 
 @Composable
-private fun InstantActionsSection(showDndDialog: () -> Unit){
+private fun InstantActionsSection(showDndDialog: () -> Unit) {
     Text(
         text = "Instant Actions",
         style = MaterialTheme.typography.titleMedium,
@@ -749,7 +750,7 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                                 MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "minutes",
+                            text = if(duration==1) "minute" else "minutes",
                             style = MaterialTheme.typography.bodySmall,
                             color = if (selectedDuration == duration)
                                 MaterialTheme.colorScheme.onPrimaryContainer
@@ -759,7 +760,7 @@ fun DurationSelection(selectedDuration: Int, onDurationSelected: (Int) -> Unit) 
                     }
                 }
             }
-            
+
             // Add Custom Duration Button
             Card(
                 modifier = Modifier
