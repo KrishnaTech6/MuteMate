@@ -2,7 +2,13 @@ An auto mute/ unmute scheduker app
 
 Customizable schedules : 
 - *Added feature:*
-   Mute feature accessible on three times volume down click from outside the app. 
+- Mute feature accessible on three times volume down click from outside the app.
+- Mute at a Location : currently implementing
+
+- **Tech Used**
+  Kotlin , Android SDK, Room , Hilt (DI), Accessibility Services, Maps Api, Places Api , WorkManager
+- Architecture - Simple MVVM
+  
 1. Want 5 min of DND? you got it
 2. Want 5 min of mute media ... done
 3. Mute ringtones .. yes sir
