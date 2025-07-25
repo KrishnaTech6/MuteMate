@@ -68,6 +68,7 @@ import com.krishna.mutemate.ui.components.MuteOptionsDropDown
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils.getCurrentLocation
 import com.krishna.mutemate.utils.SharedPrefUtils.putCurrentLocation
+import com.krishna.mutemate.utils.bitmapDescriptorFromVector
 import com.krishna.mutemate.utils.fetchPlaceDetails
 import com.krishna.mutemate.viewmodel.MapViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -106,6 +107,8 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
     val searchQueryFlow = remember { MutableStateFlow("") }
 
+    val muteList by viewmodel.allLocationMute.collectAsState(emptyList())
+
 
     LaunchedEffect(Unit) {
         if(!locationPermission.status.isGranted) {
@@ -142,10 +145,18 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                 markerPosition = latLng
             }
         ) {
-            markerPosition?.let { position ->
-            Marker(
-                state = MarkerState(position = position),
-            )
+            if(muteList.isNotEmpty()){
+                muteList.forEach { mute ->
+                    Marker(
+                        state = MarkerState(position = mute.latLng!!),
+                        title = mute.title,
+                        icon = when(mute.title){
+                            "Home" -> bitmapDescriptorFromVector(context, R.drawable.ic_home)
+                            "Office" -> bitmapDescriptorFromVector(context, R.drawable.ic_office)
+                            else -> bitmapDescriptorFromVector(context, R.drawable.ic_other)
+                        }
+                    )
+                }
             }
         }
         if(isLoading) CircularProgressIndicator()
@@ -309,7 +320,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                             muteOptions = options,
                             latLng = markerPosition,
                             radius = radius.value,
-                            title = "Home",
+                            title = markerType,
                             markerType = R.drawable.ic_home,
                         )
                         viewmodel.insertLocationMute(muteLocation)
