@@ -133,7 +133,7 @@ fun MuteScreen(
         horizontalAlignment = Alignment.CenterHorizontally) {
         if (!scheduleList.isEmpty() && scheduleList.find { getTimeUntilStart(startTime) <= 0 } != null) {
             Box(Modifier.padding(horizontal = 8.dp)) {
-                ScheduleItem(schedule = scheduleList.find { it.startTime == null }!!, true) {
+                ScheduleItem(schedule = scheduleList.find { getTimeUntilStart(startTime) <= 0 }!!, true) {
                     viewModel.deleteSchedule(it)
                     showToast("Schedule removed")
                 }

@@ -37,7 +37,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.krishna.mutemate.model.AllMuteOptions
+import com.krishna.mutemate.ui.screens.ShowDndAlert
 import com.krishna.mutemate.utils.MuteSettingsManager
+import com.krishna.mutemate.utils.hasNotificationPolicyAccess
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +59,9 @@ fun MuteOptionsDropDown(
         // State for expand/collapse
         var soundProfileExpanded by remember { mutableStateOf(false) }
         val soundCustomizationExpanded = remember { mutableStateOf(false) }
+
+        var showDialog = remember { mutableStateOf(!hasNotificationPolicyAccess(context)) }
+        if(showDialog.value) ShowDndAlert(showDialog, context)
 
             // Sound Profile Settings Dropdown
             ExpandableCard(
