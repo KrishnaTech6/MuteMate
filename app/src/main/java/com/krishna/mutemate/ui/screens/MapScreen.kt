@@ -89,6 +89,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
 
     val locationPermission = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
+    val backgroundLocationPermission = rememberPermissionState(permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION)
     var markerPosition by remember { mutableStateOf<LatLng?>( getCurrentLocation(context)) }
     var cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(markerPosition ?: LatLng(28.6139, 77.2090), 18f)
@@ -323,7 +324,10 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                             title = markerType,
                             markerType = R.drawable.ic_home,
                         )
-                        viewmodel.insertLocationMute(muteLocation)
+                        if(backgroundLocationPermission.status.isGranted)
+                            viewmodel.insertLocationMute(context, muteLocation)
+                        else
+                            backgroundLocationPermission.launchPermissionRequest()
                     }) {
                         Text("OK")
                     }

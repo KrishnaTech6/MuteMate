@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.google.android.gms.maps.model.LatLng
 
-@Entity(tableName = "locate_mute")
+@Entity(tableName = "location_mute")
 data class LocationMute(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0 ,

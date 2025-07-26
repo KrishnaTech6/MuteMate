@@ -12,11 +12,14 @@ import kotlinx.coroutines.flow.Flow
 interface LocationMuteDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertLocationMute(locationMute: LocationMute)
+    suspend fun insertLocationMute(locationMute: LocationMute) : Long
 
-    @Query("SELECT * FROM locate_mute")
+    @Query("SELECT * FROM location_mute")
     fun getAllLocationMutes(): Flow<List<LocationMute>>
 
     @Delete
     suspend fun deleteLocationMute(locationMute: LocationMute)
+
+    @Query("SELECT * FROM location_mute WHERE id = :id")
+    suspend fun getLocationById(id: Long): LocationMute?
 }
