@@ -20,6 +20,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.gson.Gson
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.worker.MuteWorker
 import com.krishna.mutemate.worker.UnmuteWorker
@@ -49,9 +50,7 @@ fun scheduleWorker(
         .setInitialDelay(unmuteDelay, TimeUnit.MILLISECONDS)
         .setInputData(
             workDataOf(
-                SCHEDULE_ID to schedule.id,
-                IS_DND to schedule.muteOptions.isDnd,
-                IS_VIBRATE to schedule.muteOptions.isVibrate
+                SCHEDULE to Gson().toJson(schedule),
             )
         ).build()
     val muteTaskName = "MuteTask_${schedule.id}"

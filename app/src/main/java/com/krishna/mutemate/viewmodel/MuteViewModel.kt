@@ -38,7 +38,7 @@ class MuteViewModel @Inject constructor(
             }
             if(scheduleList.isNotEmpty() && scheduleList.first().startTime == null && schedule.startTime==null)
                  deleteSchedule(scheduleList.first()) // delete the first item if its null as well as the new item is null this means that new duration was chosen by the user
-            val insertedId = dao.insert(schedule).toInt()
+            val insertedId = dao.insert(schedule)
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
             scheduleMuteTask(updatedSchedule)
         }

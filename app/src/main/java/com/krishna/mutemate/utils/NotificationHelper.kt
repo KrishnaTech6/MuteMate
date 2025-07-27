@@ -25,7 +25,7 @@ object NotificationHelper {
         }
     }
 
-    fun showPersistentNotification(context: Context, title: String, message: String, notificationId: Int) {
+    fun showPersistentNotification(context: Context, title: String, message: String, notificationId: Long) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             return // Don't show the notification if permission is denied
@@ -40,10 +40,10 @@ object NotificationHelper {
             .setAutoCancel(false) // Prevents the user from dismissing it
             .build()
 
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        NotificationManagerCompat.from(context).notify(notificationId.toInt(), notification)
     }
 
-    fun dismissNotification(context: Context, notificationId: Int) {
-        NotificationManagerCompat.from(context).cancel(notificationId)
+    fun dismissNotification(context: Context, notificationId: Long) {
+        NotificationManagerCompat.from(context).cancel(notificationId.toInt())
     }
 }

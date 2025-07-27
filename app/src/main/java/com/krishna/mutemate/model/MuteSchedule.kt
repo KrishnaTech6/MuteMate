@@ -6,7 +6,7 @@ import java.util.Date
 
 @Entity(tableName = "mute_schedule")
 data class MuteSchedule(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val startTime: Date?,
     val endTime: Date?,
     val muteOptions: AllMuteOptions

@@ -13,13 +13,13 @@ import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.scheduleWorker
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MuteMateAccessibilityService: AccessibilityService() {
@@ -72,23 +72,21 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 val muteDelay = 0L
                 val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()*60*1000
                 val schedule = MuteSchedule(
-                    muteOptions = AllMuteOptions(options.isDnd, options.isVibrate),
+                    muteOptions = AllMuteOptions(options.isDnd, options.isVibrate, options.muteType),
                     startTime = Date(),
                     endTime = Date(System.currentTimeMillis() + unmuteDelay),
                 )
                 // Insert to DB using Singleton
                 withContext(Dispatchers.IO) {
-                    val updatedScheduleId = dao.insert(schedule)
-                     schedule.copy(id = updatedScheduleId.toInt() )
+                    val scheduleId = dao.insert(schedule)
+                    val newSchedule = schedule.copy(id = scheduleId)
+                    scheduleWorker(
+                        muteDelay = muteDelay,
+                        unmuteDelay = unmuteDelay,
+                        schedule = newSchedule,
+                        workManager = workManager
+                    )
                 }
-
-                scheduleWorker(
-                    muteDelay = muteDelay,
-                    unmuteDelay = unmuteDelay,
-                    schedule = schedule,
-                    workManager = workManager
-                )
-
             } catch (e: Exception) {
                 e.printStackTrace()
             }
