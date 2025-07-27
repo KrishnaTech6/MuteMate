@@ -1,8 +1,6 @@
 package com.krishna.mutemate.service
 
 import android.accessibilityservice.AccessibilityService
-import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
@@ -23,11 +21,12 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MuteMateAccessibilityService: AccessibilityService() {
-    private val handler = Handler(Looper.getMainLooper())
     private var volumeDownCount = 0
     private val resetDelay = 800L // milliseconds to reset counter
     private val scope = CoroutineScope(Dispatchers.Main)
     @Inject lateinit var dao: MuteScheduleDao
+    private var lastPressTime = 0L
+
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         // Optional: Handle UI events here if needed
@@ -39,13 +38,15 @@ class MuteMateAccessibilityService: AccessibilityService() {
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         if (event?.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && event.action == KeyEvent.ACTION_DOWN) {
-            volumeDownCount++
-            
-            // Reset count after delay
-            handler.removeCallbacksAndMessages(null)
-            handler.postDelayed({
+            val now = System.currentTimeMillis()
+
+            // Reset counter if time since last press > delay
+            if (now - lastPressTime > resetDelay) {
                 volumeDownCount = 0
-            }, resetDelay)
+            }
+
+            lastPressTime = now
+            volumeDownCount++
             
             // Check if we've reached 3 presses
             if (volumeDownCount == 3) {
