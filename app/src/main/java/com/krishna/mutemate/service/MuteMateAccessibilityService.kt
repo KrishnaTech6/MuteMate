@@ -9,6 +9,7 @@ import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.utils.MuteSettingsManager
+import com.krishna.mutemate.utils.delSchedule
 import com.krishna.mutemate.utils.scheduleWorker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -79,6 +80,14 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 )
                 // Insert to DB using Singleton
                 withContext(Dispatchers.IO) {
+                    //delete the schedules already running
+                    val schedules= dao.getSchedules().first().forEach {
+                        it.startTime?.let { startTime ->
+                            if (startTime <= Date()){
+                                delSchedule(dao, applicationContext, it)
+                            }
+                        }
+                    }
                     val scheduleId = dao.insert(schedule)
                     val newSchedule = schedule.copy(id = scheduleId)
                     scheduleWorker(

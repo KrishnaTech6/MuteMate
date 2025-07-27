@@ -8,9 +8,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
-import com.krishna.mutemate.utils.NotificationHelper
 import com.krishna.mutemate.utils.SCHEDULE
-import com.krishna.mutemate.utils.cancelMuteTasks
+import com.krishna.mutemate.utils.delSchedule
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -32,11 +31,8 @@ class UnmuteWorker @AssistedInject constructor(
 
         // Delete from DB using Singleton
         withContext(Dispatchers.IO) {
-            dao.delete(schedule)
-            if(dao.getRowCount()==0) dao.resetAutoIncrement()
+            delSchedule(dao, applicationContext, schedule)
         }
-        cancelMuteTasks(context, schedule)
-        NotificationHelper.dismissNotification(context, schedule.id)
         return Result.success()
     }
 }

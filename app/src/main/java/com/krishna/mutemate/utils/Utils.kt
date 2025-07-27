@@ -22,6 +22,7 @@ import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.gson.Gson
 import com.krishna.mutemate.model.MuteSchedule
+import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.worker.MuteWorker
 import com.krishna.mutemate.worker.UnmuteWorker
 import java.util.concurrent.TimeUnit
@@ -108,5 +109,13 @@ fun fetchPlaceDetails(
         .addOnFailureListener {
             Toast.makeText(context, "Unable to get location", Toast.LENGTH_SHORT).show()
         }
+}
+
+suspend fun delSchedule(dao: MuteScheduleDao, context: Context, schedule: MuteSchedule){
+    dao.delete(schedule)
+    NotificationHelper.dismissNotification(context = context, schedule.id)
+    if(dao.getRowCount()==0)
+        dao.resetAutoIncrement()
+    cancelMuteTasks(context , schedule)
 }
 

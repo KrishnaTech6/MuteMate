@@ -6,9 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
-import com.krishna.mutemate.utils.NotificationHelper
 import com.krishna.mutemate.utils.calculateDelay
-import com.krishna.mutemate.utils.cancelMuteTasks
+import com.krishna.mutemate.utils.delSchedule
 import com.krishna.mutemate.utils.scheduleWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -46,11 +45,11 @@ class MuteViewModel @Inject constructor(
 
     fun deleteSchedule(schedule: MuteSchedule) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.delete(schedule)
-            NotificationHelper.dismissNotification(context = app.applicationContext, schedule.id)
-            if(dao.getRowCount()==0)
-                dao.resetAutoIncrement()
-            cancelMuteTasks(app.applicationContext , schedule)
+            delSchedule(
+                dao = dao,
+                context = app.applicationContext,
+                schedule = schedule
+            )
         }
     }
 
