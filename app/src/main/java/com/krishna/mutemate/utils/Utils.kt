@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
+import androidx.core.net.toUri
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -118,4 +119,29 @@ suspend fun delSchedule(dao: MuteScheduleDao, context: Context, schedule: MuteSc
         dao.resetAutoIncrement()
     cancelMuteTasks(context , schedule)
 }
+
+
+fun openWebLink(context: Context, url: String){
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        data = url.toUri()
+    }
+    context.startActivity(intent)
+}
+
+fun sendEmailIntent(context: Context, email: String= "kris672dev@gmail.com", subject: String="MuteMate Feedback") {
+    val intent = Intent(android.content.Intent.ACTION_SEND).apply {
+        type = "message/rfc822"
+        putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+        putExtra(Intent.EXTRA_SUBJECT, subject)
+    }
+
+    try {
+        context.startActivity(
+            Intent.createChooser(intent, "Send email with")
+        )
+    } catch (e: android.content.ActivityNotFoundException) {
+        Toast.makeText(context, "No email app found", android.widget.Toast.LENGTH_SHORT).show()
+    }
+}
+
 

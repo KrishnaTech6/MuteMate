@@ -15,3 +15,12 @@ const val PREF_NAME = "MyPrefs"
 const val KEY_LIST = "my_list"
 const val IS_ONBOARDING_DONE = "onboarding_done"
 const val CURRENT_LOCATION = "current_location"
+
+
+// links
+
+const val PRIVACY_POLICY = "https://www.notion.so/MuteMate-Privacy-Policy-23d9ec0321cf80828448dc8f2497e1f1?source=copy_link"
+const val HOW_TO_USE = "https://www.google.com"
+const val RATE_US = "https://www.google.com"
+const val ABOUT_APP = "https://www.google.com"
+const val SHARE_APP = "https://www.google.com"

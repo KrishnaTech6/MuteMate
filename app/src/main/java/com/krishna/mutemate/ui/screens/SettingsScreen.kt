@@ -30,6 +30,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.krishna.mutemate.utils.ABOUT_APP
+import com.krishna.mutemate.utils.HOW_TO_USE
+import com.krishna.mutemate.utils.PRIVACY_POLICY
+import com.krishna.mutemate.utils.RATE_US
+import com.krishna.mutemate.utils.SHARE_APP
+import com.krishna.mutemate.utils.openWebLink
+import com.krishna.mutemate.utils.sendEmailIntent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,12 +51,16 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsItem(
                 icon = Icons.Default.PrivacyTip,
                 title = "Privacy Policy",
-                onClick = { /* TODO: Navigate or show Privacy Policy */ }
+                onClick = {
+                    openWebLink(context, PRIVACY_POLICY)
+                }
             )
             SettingsItem(
                 icon = Icons.Default.Help,
                 title = "How to Use",
-                onClick = { /* TODO: Navigate to How to Use */ }
+                onClick = {
+                    openWebLink(context, HOW_TO_USE)
+                }
             )
         }
 
@@ -59,13 +70,13 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsSection(title = "Support")
             SettingsItem(
                 icon = Icons.Default.Feedback,
-                title = "Send Feedback",
-                onClick = { /* TODO: Navigate or open Feedback */ }
+                title = "Send Feedback Email",
+                onClick = { sendEmailIntent(context) }
             )
             SettingsItem(
                 icon = Icons.Default.Share,
                 title = "Share App",
-                onClick = { /* TODO: Share app intent */ }
+                onClick = { openWebLink(context, SHARE_APP) }
             )
         }
 
@@ -76,12 +87,12 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsItem(
                 icon = Icons.Default.Info,
                 title = "About App",
-                onClick = { /* TODO: Navigate to About screen */ }
+                onClick = { openWebLink(context, ABOUT_APP)}
             )
             SettingsItem(
                 icon = Icons.Default.StarRate,
                 title = "Rate Us",
-                onClick = { /* TODO: Open Play Store or similar */ }
+                onClick = { openWebLink(context, RATE_US)}
             )
         }
     }
