@@ -526,9 +526,11 @@ private fun ScheduleButton(
                                 )
                             } else endTime
 
+                            val finalStartTime = if(!customTimeSelected) Date() else startTime
+
                             onScheduleAdd(
                                 MuteSchedule(
-                                    startTime = startTime,
+                                    startTime = finalStartTime,
                                     endTime = finalEndTime,
                                     muteOptions = AllMuteOptions(isDnd, isVibrationMode)
                                 )

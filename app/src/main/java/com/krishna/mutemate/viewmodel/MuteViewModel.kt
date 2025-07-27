@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,8 +36,12 @@ class MuteViewModel @Inject constructor(
             if (scheduleList.any { it.startTime == schedule.startTime && it.endTime == schedule.endTime }) {
                 return@launch
             }
-            if(scheduleList.isNotEmpty() && scheduleList.first().startTime == null && schedule.startTime==null)
-                 deleteSchedule(scheduleList.first()) // delete the first item if its null as well as the new item is null this means that new duration was chosen by the user
+            if(scheduleList.isNotEmpty() && schedule.startTime!! <= Date()){
+                val alreadyRunning = scheduleList.find { it.startTime!! <= Date() }
+                alreadyRunning?.let {
+                    deleteSchedule(it)
+                }
+            }
             val insertedId = dao.insert(schedule)
             val updatedSchedule = schedule.copy(id = insertedId) // Update the schedule with the correct ID
             scheduleMuteTask(updatedSchedule)
