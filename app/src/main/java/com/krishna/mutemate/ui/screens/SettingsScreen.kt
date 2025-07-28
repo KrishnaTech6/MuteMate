@@ -33,10 +33,10 @@ import androidx.navigation.NavHostController
 import com.krishna.mutemate.utils.ABOUT_APP
 import com.krishna.mutemate.utils.HOW_TO_USE
 import com.krishna.mutemate.utils.PRIVACY_POLICY
-import com.krishna.mutemate.utils.RATE_US
-import com.krishna.mutemate.utils.SHARE_APP
 import com.krishna.mutemate.utils.openWebLink
+import com.krishna.mutemate.utils.rateApp
 import com.krishna.mutemate.utils.sendEmailIntent
+import com.krishna.mutemate.utils.shareApp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,7 +76,7 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsItem(
                 icon = Icons.Default.Share,
                 title = "Share App",
-                onClick = { openWebLink(context, SHARE_APP) }
+                onClick = { shareApp(context) }
             )
         }
 
@@ -92,7 +92,7 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsItem(
                 icon = Icons.Default.StarRate,
                 title = "Rate Us",
-                onClick = { openWebLink(context, RATE_US)}
+                onClick = { rateApp(context)}
             )
         }
     }

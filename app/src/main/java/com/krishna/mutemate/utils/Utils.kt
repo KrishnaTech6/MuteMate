@@ -1,6 +1,7 @@
 package com.krishna.mutemate.utils
 
 import android.app.NotificationManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
@@ -129,7 +130,7 @@ fun openWebLink(context: Context, url: String){
 }
 
 fun sendEmailIntent(context: Context, email: String= "kris672dev@gmail.com", subject: String="MuteMate Feedback") {
-    val intent = Intent(android.content.Intent.ACTION_SEND).apply {
+    val intent = Intent(Intent.ACTION_SEND).apply {
         type = "message/rfc822"
         putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
         putExtra(Intent.EXTRA_SUBJECT, subject)
@@ -139,8 +140,47 @@ fun sendEmailIntent(context: Context, email: String= "kris672dev@gmail.com", sub
         context.startActivity(
             Intent.createChooser(intent, "Send email with")
         )
-    } catch (e: android.content.ActivityNotFoundException) {
-        Toast.makeText(context, "No email app found", android.widget.Toast.LENGTH_SHORT).show()
+    } catch (e: ActivityNotFoundException) {
+        Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+    }
+}
+
+
+fun shareApp(context: Context) {
+    val packageName = context.packageName
+    val shareIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(
+            Intent.EXTRA_TEXT,
+            "Check out this app: https://play.google.com/store/apps/details?id=$packageName"
+        )
+        type = "text/plain"
+    }
+    context.startActivity(Intent.createChooser(shareIntent, "Share via"))
+}
+
+fun rateApp(context: Context) {
+    val packageName = context.packageName
+    try {
+        // Try to open in Play Store app
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                "market://details?id=$packageName".toUri()
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
+    } catch (e: ActivityNotFoundException) {
+        // If Play Store app not found, open in browser
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                "https://play.google.com/store/apps/details?id=$packageName".toUri()
+            ).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+        )
     }
 }
 

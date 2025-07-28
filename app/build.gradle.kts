@@ -21,6 +21,15 @@ android {
     namespace = "com.krishna.mutemate"
     compileSdk = 35
 
+    signingConfigs{
+        create("release") {
+            storeFile = file(properties["RELEASE_STORE_FILE"] as String)
+            storePassword = properties["RELEASE_STORE_PASSWORD"] as String
+            keyAlias = properties["RELEASE_KEY_ALIAS"] as String
+            keyPassword = properties["RELEASE_KEY_PASSWORD"] as String
+        }
+    }
+
     defaultConfig {
         applicationId = "com.krishna.mutemate"
         minSdk = 24
@@ -43,7 +52,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
