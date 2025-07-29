@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material3.Button
@@ -69,6 +70,12 @@ fun OnBoardingScreen(
             description = "Define mute rules that match your life — for meetings, focus time, or your daily routine.",
             icon = Icons.Default.Settings,
             iconTint = Color(0xFFE25441)
+        ),
+        OnBoardingPage(
+            title = "Dynamic Theme Support",
+            description = "Enjoy a theme that adapts to your device’s colors for a seamless, modern look.",
+            icon = Icons.Default.Palette,
+            iconTint = Color(0xFF9C27B0) // Purple for creativity and design
         ),
         OnBoardingPage(
             title = "Location-Based Muting (Coming Soon)",
