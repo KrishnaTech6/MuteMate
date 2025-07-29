@@ -48,35 +48,36 @@ fun OnBoardingScreen(
     val pages = listOf(
         OnBoardingPage(
             title = "Welcome to MuteMate",
-            description = "Effortlessly mute your phone when you need peace. MuteMate makes it automatic, easy, and smart!",
+            description = "Silence with a purpose. MuteMate is your personal sound assistant — quick, smart, and always in control.",
             icon = Icons.Default.Notifications,
             iconTint = MaterialTheme.colorScheme.primary
         ),
         OnBoardingPage(
-            title = "Quick Mute",
-            description = "Mute your device instantly with a single tap using Quick Mute.",
+            title = "Smart Mute Scheduling",
+            description = "Mute your phone for a few minutes or hours — just the way you need it, whenever you need it.",
             icon = Icons.Default.VolumeOff,
             iconTint = Color(0xFF3186D1)
         ),
         OnBoardingPage(
-            title = "Custom Muting",
-            description = "Set up your own mute rules for meetings, work, or study times.",
-            icon = Icons.Default.Settings,
-            iconTint = Color(0xFFE25441)
-        ),
-        OnBoardingPage(
-            title = "Triple Volume Down to Mute (Outside App)",
-            description = "Quickly mute your phone by triple pressing the volume down button.",
+            title = "Triple Volume Down = Instant Mute",
+            description = "No app opening, no delay. Just press volume down 3 times — and you're instantly on silent.",
             icon = Icons.Default.Accessibility,
             iconTint = Color(0xFFFF9800)
         ),
         OnBoardingPage(
-            title = "Location-based Muting",
-            description = "Automatically mute at selected locations using the map!",
+            title = "Custom Rules, Your Way",
+            description = "Define mute rules that match your life — for meetings, focus time, or your daily routine.",
+            icon = Icons.Default.Settings,
+            iconTint = Color(0xFFE25441)
+        ),
+        OnBoardingPage(
+            title = "Location-Based Muting (Coming Soon)",
+            description = "Automatically mute your phone when you arrive at a saved place — like home, office, or college.",
             icon = Icons.Default.LocationOn,
             iconTint = Color(0xFF43A047)
         )
     )
+
     val pagerState = rememberPagerState(
         initialPage = 0,
         pageCount = { pages.size }

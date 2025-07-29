@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -159,15 +161,32 @@ fun QuickMuteGesture(
     }
     // Show accessibility service dialog if needed
     if (showAccessibilityDialog) {
+        var isConsentGiven by remember { mutableStateOf(false) }
+
         AlertDialog(
             onDismissRequest = { showAccessibilityDialog = false },
             title = { Text("Enable Accessibility Service") },
             text = {
                 Column {
-                    Text("To use the Quick Mute feature, MuteMate needs accessibility permissions.")
+                    Text(
+                        "Mute Mate uses the AccessibilityService API only to detect when you triple-press the volume down button. " +
+                                "This is necessary for the Quick Mute feature to work from any screen, including the lock screen."
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("This allows the app to detect when you triple-press the volume down button to instantly mute your device.",
-                        style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "We do NOT collect, store, or share any personal or sensitive data. " +
+                                "All actions happen entirely on your device.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = isConsentGiven,
+                            onCheckedChange = { isConsentGiven = it }
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("I understand and give consent.")
+                    }
                 }
             },
             confirmButton = {
@@ -175,15 +194,14 @@ fun QuickMuteGesture(
                     onClick = {
                         showAccessibilityDialog = false
                         context.startActivity(AccessibilityUtils.getAccessibilitySettingsIntent())
-                    }
+                    },
+                    enabled = isConsentGiven
                 ) {
                     Text("Enable Access")
                 }
             },
             dismissButton = {
-                Button(
-                    onClick = { showAccessibilityDialog = false }
-                ) {
+                Button(onClick = { showAccessibilityDialog = false }) {
                     Text("Later")
                 }
             }

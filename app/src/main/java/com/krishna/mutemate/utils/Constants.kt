@@ -20,5 +20,5 @@ const val CURRENT_LOCATION = "current_location"
 // links
 
 const val PRIVACY_POLICY = "https://www.notion.so/MuteMate-Privacy-Policy-23d9ec0321cf80828448dc8f2497e1f1?source=copy_link"
-const val HOW_TO_USE = "https://www.google.com"
-const val ABOUT_APP = "https://www.google.com"
+const val HOW_TO_USE = "https://youtube.com/shorts/A7vwLwFLmfQ?si=6SirrnR3DgaN8gDe"
+const val ABOUT_APP = "https://www.notion.so/About-the-App-23f9ec0321cf80a28f5fdaf472300f84?source=copy_link"
