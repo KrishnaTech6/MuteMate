@@ -37,7 +37,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.krishna.mutemate.model.AllMuteOptions
+import com.krishna.mutemate.utils.DROP_DOWN_HEADER_MUTE_OPTIONS
 import com.krishna.mutemate.utils.MuteSettingsManager
+import com.krishna.mutemate.utils.SharedPrefUtils
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,14 +55,14 @@ fun MuteOptionsDropDown(
         val coroutineScope = rememberCoroutineScope()
         val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
         val titles = listOf("DND Mode", "Vibration Mode", "Custom Mode")
-        var title by remember { mutableStateOf(titles[0]) }
+        var title by remember { mutableStateOf(SharedPrefUtils.getString(context,DROP_DOWN_HEADER_MUTE_OPTIONS ))}
         // State for expand/collapse
         var soundProfileExpanded by remember { mutableStateOf(false) }
         val soundCustomizationExpanded = remember { mutableStateOf(false) }
 
             // Sound Profile Settings Dropdown
             ExpandableCard(
-                title = title,
+                title = title?: titles[0],
                 expanded = soundProfileExpanded,
                 onExpandChanged = { soundProfileExpanded = it },
                 modifier = Modifier.fillMaxWidth()
@@ -75,6 +77,7 @@ fun MuteOptionsDropDown(
                         }
                         if(it){
                             title = titles[0]
+                            SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                             soundProfileExpanded = false
                         }
 
@@ -91,6 +94,7 @@ fun MuteOptionsDropDown(
 
                         if(it){
                             title = titles[1]
+                            SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                             soundProfileExpanded = false
                         }
                     }
@@ -137,6 +141,7 @@ fun MuteOptionsDropDown(
                             )
                         }
                         title = titles[2]
+                        SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                     }
 
                     SoundToggle(
@@ -150,6 +155,7 @@ fun MuteOptionsDropDown(
                                 isChecked
                             )
                             title = titles[2]
+                            SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                         }
                     }
 
@@ -164,6 +170,7 @@ fun MuteOptionsDropDown(
                                 isChecked
                             )
                             title = titles[2]
+                            SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                         }
                     }
 
@@ -179,6 +186,7 @@ fun MuteOptionsDropDown(
                             )
                         }
                         title = titles[2]
+                        SharedPrefUtils.saveString(context, DROP_DOWN_HEADER_MUTE_OPTIONS, title!!)
                     }
                 }
             }

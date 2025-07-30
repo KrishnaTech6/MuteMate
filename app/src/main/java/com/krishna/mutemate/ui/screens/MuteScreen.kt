@@ -71,7 +71,6 @@ import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.ui.components.ButtonMute
 import com.krishna.mutemate.ui.components.MuteOptionsDropDown
 import com.krishna.mutemate.ui.features.QuickMuteGesture
-import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils
@@ -126,15 +125,6 @@ fun MuteScreen(
     fun showToast(msg: String) {
         coroutineScope.launch {
             snackbarHostState.showSnackbar(msg)
-        }
-    }
-    // accessibility services
-    LaunchedEffect(Unit) {
-        val isAccessibilityEnabled = AccessibilityUtils.isAccessibilityServiceEnabled(context)
-        if (isAccessibilityEnabled) {
-            muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, true)
-        } else {
-            muteSettingsManager.saveSetting(MuteSettingsManager.QUICK_MUTE_ENABLED, false)
         }
     }
 

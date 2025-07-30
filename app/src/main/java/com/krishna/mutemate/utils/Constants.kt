@@ -15,6 +15,7 @@ const val PREF_NAME = "MyPrefs"
 const val KEY_LIST = "my_list"
 const val IS_ONBOARDING_DONE = "onboarding_done"
 const val CURRENT_LOCATION = "current_location"
+const val DROP_DOWN_HEADER_MUTE_OPTIONS = "mute_options"
 
 
 // links
