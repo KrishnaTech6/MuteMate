@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.SetMuteType
@@ -25,6 +26,8 @@ class MuteSettingsManager(private val context: Context) {
          val MUTE_MEDIA_KEY = booleanPreferencesKey("mute_media")
          val QUICK_MUTE_DURATION_KEY = intPreferencesKey("quick_mute_duration")
          val QUICK_MUTE_ENABLED = booleanPreferencesKey("quick_mute_enabled")
+
+        val THEME_MODE = stringPreferencesKey("theme_mode") // "light", "dark", "system"
     }
 
     // Get saved values (Flow emits changes automatically)
@@ -68,5 +71,15 @@ class MuteSettingsManager(private val context: Context) {
     suspend fun updateQuickMuteDuration(minutes: Int) {
         saveIntSetting(QUICK_MUTE_DURATION_KEY, minutes)
         Log.d("TAG", "updateQuickMuteDuration: $minutes")
+    }
+
+    suspend fun saveThemeMode(context: Context, mode: String) {
+        context.dataStore.edit { prefs ->
+            prefs[THEME_MODE] = mode
+        }
+    }
+
+    fun getThemeSettings(context: Context) = context.dataStore.data.map { prefs ->
+       prefs[THEME_MODE] ?: "system"
     }
 }

@@ -2,6 +2,7 @@ package com.krishna.mutemate.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,8 +23,12 @@ import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -32,19 +37,37 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.krishna.mutemate.utils.ABOUT_APP
 import com.krishna.mutemate.utils.HOW_TO_USE
+import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.PRIVACY_POLICY
 import com.krishna.mutemate.utils.openWebLink
 import com.krishna.mutemate.utils.rateApp
 import com.krishna.mutemate.utils.sendEmailIntent
 import com.krishna.mutemate.utils.shareApp
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavHostController, context: Context = LocalContext.current, modifier: Modifier = Modifier) {
+    val scope = rememberCoroutineScope()
+    val themePreferences = MuteSettingsManager(context)
+    val currentMode by themePreferences.getThemeSettings(context).collectAsState(initial = "system")
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
+            .padding(bottom = 16.dp)
     ) {
+        item {
+            SettingsSection(title = "Appearance")
+            ThemeModeSelector(
+                currentMode = currentMode,
+                onModeChange = { mode ->
+                    scope.launch {
+                        themePreferences.saveThemeMode(context, mode)
+                    }
+                }
+            )
+        }
         item {
             // General Section
             SettingsSection(title = "General")
@@ -140,5 +163,28 @@ fun SettingsItem(
             contentDescription = "Go",
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+@Composable
+fun ThemeModeSelector(
+    currentMode: String,
+    onModeChange: (String) -> Unit
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)){
+        listOf("system", "light", "dark").forEach { mode ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onModeChange(mode) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(
+                    selected = currentMode == mode,
+                    onClick = { onModeChange(mode) }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(mode.replaceFirstChar { it.uppercase() })
+            }
+        }
     }
 }
