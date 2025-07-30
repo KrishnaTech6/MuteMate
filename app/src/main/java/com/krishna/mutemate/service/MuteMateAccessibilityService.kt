@@ -52,11 +52,6 @@ class MuteMateAccessibilityService: AccessibilityService() {
             // Check if we've reached 3 presses
             if (volumeDownCount == 3) {
                 volumeDownCount = 0
-                Toast.makeText(
-                    applicationContext,
-                    "Quick mute activated",
-                    Toast.LENGTH_SHORT
-                ).show()
                 activateCustomDurationMute()
                 return true
             }
@@ -71,32 +66,37 @@ class MuteMateAccessibilityService: AccessibilityService() {
                 val muteSettingsManager = MuteSettingsManager(applicationContext)
                 val options = muteSettingsManager.allMuteOptions.first()
 
-                val muteDelay = 0L
-                val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()*60*1000
-                val schedule = MuteSchedule(
-                    muteOptions = AllMuteOptions(options.isDnd, options.isVibrate, options.muteType),
-                    startTime = Date(),
-                    endTime = Date(System.currentTimeMillis() + unmuteDelay),
-                )
-                // Insert to DB using Singleton
-                withContext(Dispatchers.IO) {
-                    //delete the schedules already running
-                    val schedules= dao.getSchedules().first().forEach {
-                        it.startTime?.let { startTime ->
-                            if (startTime <= Date()){
-                                delSchedule(dao, applicationContext, it)
+                if(options.isValid()){
+                    val muteDelay = 0L
+                    val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()*60*1000
+                    val schedule = MuteSchedule(
+                        muteOptions = AllMuteOptions(options.isDnd, options.isVibrate, options.muteType),
+                        startTime = Date(),
+                        endTime = Date(System.currentTimeMillis() + unmuteDelay),
+                    )
+                    // Insert to DB using Singleton
+                    withContext(Dispatchers.IO) {
+                        //delete the schedules already running
+                        val schedules= dao.getSchedules().first().forEach {
+                            it.startTime?.let { startTime ->
+                                if (startTime <= Date()){
+                                    delSchedule(dao, applicationContext, it)
+                                }
                             }
                         }
+                        val scheduleId = dao.insert(schedule)
+                        val newSchedule = schedule.copy(id = scheduleId)
+                        scheduleWorker(
+                            muteDelay = muteDelay,
+                            unmuteDelay = unmuteDelay,
+                            schedule = newSchedule,
+                            workManager = workManager,
+                            applicationContext
+                        )
                     }
-                    val scheduleId = dao.insert(schedule)
-                    val newSchedule = schedule.copy(id = scheduleId)
-                    scheduleWorker(
-                        muteDelay = muteDelay,
-                        unmuteDelay = unmuteDelay,
-                        schedule = newSchedule,
-                        workManager = workManager,
-                        applicationContext
-                    )
+                    Toast.makeText(applicationContext, "Quick mute activated", Toast.LENGTH_SHORT).show()
+                }else{
+                    Toast.makeText(applicationContext, "Failed: No MUTE MODE selected", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

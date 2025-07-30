@@ -77,7 +77,6 @@ import com.krishna.mutemate.utils.SharedPrefUtils
 import com.krishna.mutemate.utils.checkExactAlarmPermission
 import com.krishna.mutemate.utils.getTimeUntilStart
 import com.krishna.mutemate.utils.hasNotificationPolicyAccess
-import com.krishna.mutemate.utils.isBatteryLow
 import com.krishna.mutemate.utils.requestNotificationPolicyAccess
 import com.krishna.mutemate.utils.sendUserToExactAlarmSettings
 import com.krishna.mutemate.viewmodel.MuteViewModel
@@ -447,8 +446,9 @@ private fun ScheduleButton(
     isVibrationMode: Boolean,
     onScheduleAdd: (MuteSchedule) -> Unit,
     onShowDialog: () -> Unit,
-    onShowToast: (String) -> Unit
+    onShowToast: (String) -> Unit,
 ) {
+    val muteOptions by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -543,9 +543,9 @@ private fun ScheduleButton(
                 onClick = {
                     when {
                         !hasNotificationPolicyAccess(context) -> onShowDialog()
-                        isBatteryLow(context) -> onShowToast("Battery is low, can't schedule task")
                         (selectedDuration == 0 && !customTimeSelected) -> onShowToast("Please select duration")
-                        (endTime == null && customTimeSelected) -> onShowToast("Please select start and end time")
+                        ((endTime == null || startTime == null) && customTimeSelected) -> onShowToast("Please select start and end time")
+                        !muteOptions.isValid() -> onShowToast("Please select at least one mute mode")
                         else -> {
                             val finalEndTime = if (!customTimeSelected) {
                                 Date(
