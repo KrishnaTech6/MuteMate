@@ -1,17 +1,20 @@
 package com.krishna.mutemate.utils
 
+import android.app.AlarmManager
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
 import android.os.BatteryManager
+import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.net.toUri
-import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -22,11 +25,10 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
-import com.google.gson.Gson
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.worker.MuteWorker
-import com.krishna.mutemate.worker.UnmuteWorker
+import com.krishna.mutemate.worker.UnmuteReceiver
 import java.util.concurrent.TimeUnit
 
 fun isBatteryLow(context: Context): Boolean {
@@ -40,27 +42,55 @@ fun scheduleWorker(
     muteDelay: Long,
     unmuteDelay: Long,
     schedule: MuteSchedule,
-    workManager: WorkManager
+    workManager: WorkManager,
+    context: Context
 ) {
     val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
         .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
-        .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
         .setInputData(workDataOf(SCHEDULE_ID to schedule.id, DELAY to unmuteDelay))
         .build()
+    workManager.enqueueUniqueWork("MuteTask_${schedule.id}", ExistingWorkPolicy.REPLACE, muteRequest)
+    // alarm manager for exact time
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val intent = Intent(context, UnmuteReceiver::class.java).apply {
+        putExtra(SCHEDULE_ID, schedule.id)
+    }
 
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        schedule.id.toInt(), // unique per schedule
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
 
-    val unmuteRequest = OneTimeWorkRequestBuilder<UnmuteWorker>()
-        .setInitialDelay(unmuteDelay, TimeUnit.MILLISECONDS)
-        .setInputData(
-            workDataOf(
-                SCHEDULE to Gson().toJson(schedule),
-            )
-        ).build()
-    val muteTaskName = "MuteTask_${schedule.id}"
-    val unmuteTaskName = "UnMuteTask_${schedule.id}"
-    workManager.enqueueUniqueWork(muteTaskName, ExistingWorkPolicy.REPLACE, muteRequest)
-    workManager.enqueueUniqueWork(unmuteTaskName, ExistingWorkPolicy.REPLACE, unmuteRequest)
+    val triggerAtMillis = System.currentTimeMillis() + unmuteDelay
+
+    alarmManager.setExactAndAllowWhileIdle(
+        AlarmManager.RTC_WAKEUP,
+        triggerAtMillis,
+        pendingIntent
+    )
+
+    Log.d("MuteMate", "✅ Mute scheduled in ${muteDelay / 60000} min, Unmute in ${unmuteDelay / 60000} min")
 }
+
+fun checkExactAlarmPermission(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        return !alarmManager.canScheduleExactAlarms() // true if permission is missing
+    }else return false
+}
+
+ fun sendUserToExactAlarmSettings(context: Context) {
+     if(checkExactAlarmPermission(context)){
+         // Send user to settings
+         val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+             data = "package:${context.packageName}".toUri()
+         }
+         context.startActivity(intent)
+     }
+}
+
 
 fun cancelMuteTasks(context: Context, schedule: MuteSchedule) {
     val workManager = WorkManager.getInstance(context)

@@ -75,10 +75,12 @@ import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteHelper
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils
+import com.krishna.mutemate.utils.checkExactAlarmPermission
 import com.krishna.mutemate.utils.getTimeUntilStart
 import com.krishna.mutemate.utils.hasNotificationPolicyAccess
 import com.krishna.mutemate.utils.isBatteryLow
 import com.krishna.mutemate.utils.requestNotificationPolicyAccess
+import com.krishna.mutemate.utils.sendUserToExactAlarmSettings
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -108,10 +110,17 @@ fun MuteScreen(
     val muteSettingsManager = remember { MuteSettingsManager(context) }
     val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
     val showDialog = remember { mutableStateOf(false) }
+    val showExactAlarmDialog = remember { mutableStateOf(checkExactAlarmPermission(context)) }
+    // need to ask permissions after api 31
+
     val scheduleList by viewModel.allSchedules.collectAsState(emptyList())
 
     if (showDialog.value) {
         ShowDndAlert(showDialog, context)
+    }
+
+    if(showExactAlarmDialog.value){
+        ShowExactAlarmAlert(showExactAlarmDialog, context)
     }
 
     fun showToast(msg: String) {
@@ -202,6 +211,38 @@ fun MuteScreen(
 
     }
 }
+
+@Composable
+fun ShowExactAlarmAlert(showDialog: MutableState<Boolean>, context: Context) {
+    AlertDialog(
+        onDismissRequest = { showDialog.value = false },
+        title = { Text("Allow Exact Alarms") },
+        text = {
+            Text(
+                "This app needs permission to set alarms that go off exactly on time, " +
+                        "even when your phone is in Do Not Disturb mode or idle. " +
+                        "Without this permission, scheduled unmute may be delayed.",
+                textAlign = TextAlign.Justify
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    sendUserToExactAlarmSettings(context)
+                    showDialog.value = false
+                }
+            ) {
+                Text("Go to Settings")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { showDialog.value = false }) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
 
 @Composable
 private fun ScheduleSection(

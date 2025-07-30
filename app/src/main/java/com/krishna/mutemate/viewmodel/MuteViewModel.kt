@@ -66,7 +66,8 @@ class MuteViewModel @Inject constructor(
             muteDelay = muteDelay,
             unmuteDelay = unmuteDelay,
             schedule = schedule,
-            workManager = workManager
+            workManager = workManager,
+            app.applicationContext
         )
     }
 }

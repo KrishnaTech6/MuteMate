@@ -27,7 +27,6 @@ class MuteWorker @AssistedInject constructor(
 
         // Read settings synchronously
         val options = MuteSettingsManager(context).allMuteOptions.first()
-
         val scheduleTitle = when {
             options.isDnd -> {
                 muteHelper.dndModeOn()
@@ -47,13 +46,12 @@ class MuteWorker @AssistedInject constructor(
                 "Mute schedule running."
             }
         }
-        val dateTime = System.currentTimeMillis() + delay
-        val dateFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
-        val formattedDateTime = dateFormat.format(dateTime)
+        val formattedEnd = SimpleDateFormat("hh:mm a", Locale.getDefault())
+            .format(System.currentTimeMillis() + delay)
         NotificationHelper.showPersistentNotification(
             context,
             scheduleTitle,
-            "Schedule will end at $formattedDateTime.",
+            "Schedule will end at $formattedEnd.",
             scheduleId
         )
         return Result.success()

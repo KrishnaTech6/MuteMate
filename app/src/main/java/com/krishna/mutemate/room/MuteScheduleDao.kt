@@ -16,6 +16,9 @@ interface MuteScheduleDao {
     @Query("SELECT * FROM mute_schedule ORDER BY id DESC")
     fun getSchedules(): Flow<List<MuteSchedule>>
 
+    @Query("SELECT * FROM mute_schedule WHERE id = :scheduleId")
+    suspend fun getScheduleById(scheduleId: Long): MuteSchedule?
+
     @Query("DELETE FROM sqlite_sequence WHERE name = 'mute_schedule'")
     suspend fun resetAutoIncrement()
 

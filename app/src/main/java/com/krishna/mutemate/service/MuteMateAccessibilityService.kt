@@ -94,7 +94,8 @@ class MuteMateAccessibilityService: AccessibilityService() {
                         muteDelay = muteDelay,
                         unmuteDelay = unmuteDelay,
                         schedule = newSchedule,
-                        workManager = workManager
+                        workManager = workManager,
+                        applicationContext
                     )
                 }
             } catch (e: Exception) {
