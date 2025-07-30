@@ -14,7 +14,7 @@ enum class Destination(
     val icon: ImageVector,
     val contentDescription: String
 ) {
-    HOME("songs", "Songs", Icons.Default.Home, "Songs"),
+    HOME("home", "Home", Icons.Default.Home, "home"),
     LIST("list", "List", Icons.Default.FormatListBulleted, "Album"),
     MAP("map", "Map", Icons.Default.PinDrop, "Map"),
     SETTINGS("settings", "Settings", Icons.Default.Settings, "Settings"),

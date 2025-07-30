@@ -1,6 +1,5 @@
 package com.krishna.mutemate.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,12 +23,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,15 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.ui.components.NoRunningSchedule
-import com.krishna.mutemate.utils.formatTimeRemaining
 import com.krishna.mutemate.utils.getTimeUntilStart
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 
 @Composable
@@ -71,7 +62,7 @@ fun ScheduleListScreen(
         }else {
             LazyColumn {
                 items(schedules) { schedule ->
-                    ScheduleItem(schedule, getTimeUntilStart(schedule.startTime) == 0) {
+                    ScheduleItem(schedule, getTimeUntilStart(schedule.startTime) <= 0, viewModel) {
                         viewModel.deleteSchedule(it)
                         showToast("Schedule removed")
                     }
@@ -85,10 +76,11 @@ fun ScheduleListScreen(
 fun ScheduleItem(
     schedule: MuteSchedule,
     isRunning: Boolean = false,
+    viewModel: MuteViewModel,
     onRemove: (MuteSchedule) -> Unit
 ) {
     val formattedScheduleTime = remember(schedule) {
-        formatScheduleDuration(schedule.startTime, schedule.endTime)
+        viewModel.formatScheduleDuration(schedule.startTime, schedule.endTime)
     }
 
     Box(
@@ -115,31 +107,10 @@ fun ScheduleItem(
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(Modifier.width(8.dp))
-                    ScheduleText(schedule)
+                    ScheduleText(schedule, viewModel)
                 }
-                var timeRemaining by remember(schedule.endTime) {
-                    mutableStateOf(
-                        getTimeUntilStart(
-                            schedule.endTime
-                        )
-                    )
-                }
-                var text by remember(schedule.endTime) {
-                    mutableStateOf(
-                        formatTimeRemaining(
-                            timeRemaining,
-                            isEnd = true
-                        )
-                    )
-                }
-
-                LaunchedEffect(schedule.endTime) {
-                    while (timeRemaining > 0) {
-                        text = formatTimeRemaining(timeRemaining, isEnd = true)
-                        delay(if (timeRemaining > 2 * 60) 60 * 1000 else 1000) // Adjust update frequency
-                        timeRemaining = getTimeUntilStart(schedule.endTime)
-                    }
-                }
+                val timeRemaining by viewModel.remainingTimeFlow(schedule.endTime).collectAsState(initial = 0)
+                var text = viewModel.formatTimeRemaining(timeRemaining, isEnd = true)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.Schedule,
@@ -166,40 +137,12 @@ fun ScheduleItem(
 }
 
 @Composable
-fun ScheduleText(schedule: MuteSchedule) {
-    var timeRemaining by remember(schedule.startTime) { mutableStateOf(getTimeUntilStart(schedule.startTime)) }
-    var text by remember(schedule.startTime) { mutableStateOf(formatTimeRemaining(timeRemaining)) }
+fun ScheduleText(schedule: MuteSchedule, viewModel: MuteViewModel) {
+    val timeRemaining by viewModel.remainingTimeFlow(schedule.startTime).collectAsState(initial = 0)
+    var text = viewModel.formatTimeRemaining(timeRemaining, isEnd = false)
 
-    LaunchedEffect(schedule.startTime) {
-        while (timeRemaining > 0) {
-            text = formatTimeRemaining(timeRemaining)
-            delay(if (timeRemaining > 2 * 60) 60 * 1000 else 1000) // Adjust update frequency
-            timeRemaining = getTimeUntilStart(schedule.startTime)
-        }
-    }
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.primary)
     )
 }
-
-fun formatScheduleDuration(startTime: Date?, endTime: Date?): String {
-    return try {
-        if (startTime == null) return "Ends at ${SimpleDateFormat("hh:mm a", Locale.getDefault()).format(endTime)}"
-
-        val outputFormat = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
-
-        val startFormatted = outputFormat.format(startTime)
-        val endFormatted = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(endTime!!)
-
-        val isSameDay = SimpleDateFormat("dd MMM", Locale.getDefault()).format(startTime) ==
-                SimpleDateFormat("dd MMM", Locale.getDefault()).format(endTime)
-
-        return if (isSameDay) "$startFormatted – $endFormatted"
-        else "$startFormatted – ${outputFormat.format(endTime)}"
-    } catch (e: Exception) {
-        Log.e("ScheduleDuration", "Error formatting schedule duration: ${e.message}")
-        return ""
-    }
-}
-

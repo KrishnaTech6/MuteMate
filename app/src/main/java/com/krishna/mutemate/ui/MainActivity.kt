@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
@@ -54,7 +55,9 @@ class MainActivity : ComponentActivity() {
         requestNotificationPermission()
         setContent {
             val themeMode by MuteSettingsManager(this).getThemeSettings(this).collectAsState(initial = "system")
-            MuteMateTheme(themeMode) {
+            val view = LocalView.current
+
+            MuteMateTheme(window ,view, themeMode) {
                 val navController = rememberNavController()
                 val coroutineScope = rememberCoroutineScope()
                 val startDestination = if (getBoolean(this, IS_ONBOARDING_DONE)) MAIN else ONBOARDING
