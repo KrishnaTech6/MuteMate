@@ -145,6 +145,8 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             if (AccessibilityUtils.isAccessibilityServiceEnabled(this@MainActivity)) {
                 MuteSettingsManager(this@MainActivity).saveSetting(MuteSettingsManager.Companion.QUICK_MUTE_ENABLED, true)
+            }else{
+                MuteSettingsManager(this@MainActivity).saveSetting(MuteSettingsManager.Companion.QUICK_MUTE_ENABLED, false)
             }
         }
     }
