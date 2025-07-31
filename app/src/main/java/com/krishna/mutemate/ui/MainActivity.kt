@@ -39,6 +39,7 @@ import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.NotificationHelper
 import com.krishna.mutemate.utils.SharedPrefUtils.getBoolean
 import com.krishna.mutemate.utils.SharedPrefUtils.saveBoolean
+import com.krishna.mutemate.utils.UpdateHelper
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -46,9 +47,14 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var updateHelper: UpdateHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        updateHelper = UpdateHelper(this)
+        // Check for update (Flexible mode)
+        updateHelper.checkForAppUpdate(immediate = false)
+
         // Create notification channel
         NotificationHelper.createNotificationChannel(this)
         // Request notification permission
@@ -142,6 +148,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        updateHelper.onResumeCheck()
         lifecycleScope.launch {
             if (AccessibilityUtils.isAccessibilityServiceEnabled(this@MainActivity)) {
                 MuteSettingsManager(this@MainActivity).saveSetting(MuteSettingsManager.Companion.QUICK_MUTE_ENABLED, true)
