@@ -109,7 +109,7 @@ fun ScheduleItem(
                     Spacer(Modifier.width(8.dp))
                     ScheduleText(schedule, viewModel)
                 }
-                val timeRemaining by viewModel.remainingTimeFlow(schedule.endTime).collectAsState(initial = 0)
+                val timeRemaining by viewModel.remainingTimeFlow(schedule.endTime).collectAsState(initial = getTimeUntilStart(schedule.startTime))
                 var text = viewModel.formatTimeRemaining(timeRemaining, isEnd = true)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -138,7 +138,7 @@ fun ScheduleItem(
 
 @Composable
 fun ScheduleText(schedule: MuteSchedule, viewModel: MuteViewModel) {
-    val timeRemaining by viewModel.remainingTimeFlow(schedule.startTime).collectAsState(initial = 0)
+    val timeRemaining by viewModel.remainingTimeFlow(schedule.startTime).collectAsState(initial = getTimeUntilStart(schedule.startTime))
     var text = viewModel.formatTimeRemaining(timeRemaining, isEnd = false)
 
     Text(

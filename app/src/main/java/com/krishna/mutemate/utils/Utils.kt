@@ -10,7 +10,6 @@ import android.graphics.Canvas
 import android.os.BatteryManager
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
@@ -25,18 +24,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.FetchPlaceRequest
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.krishna.mutemate.broadcast_receiver.UnmuteReceiver
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.worker.MuteWorker
-import com.krishna.mutemate.worker.UnmuteReceiver
 import java.util.concurrent.TimeUnit
-
-fun isBatteryLow(context: Context): Boolean {
-    val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-    val batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-
-    return batteryLevel <= 15 // Consider battery low if 20% or less
-}
 
 fun scheduleWorker(
     muteDelay: Long,
@@ -45,6 +37,7 @@ fun scheduleWorker(
     workManager: WorkManager,
     context: Context
 ) {
+    cancelUnmuteAlarm(schedule.id, context)
     val muteRequest = OneTimeWorkRequestBuilder<MuteWorker>()
         .setInitialDelay(muteDelay, TimeUnit.MILLISECONDS)
         .setInputData(workDataOf(SCHEDULE_ID to schedule.id, DELAY to unmuteDelay))
@@ -70,9 +63,25 @@ fun scheduleWorker(
         triggerAtMillis,
         pendingIntent
     )
-
-    Log.d("MuteMate", "✅ Mute scheduled in ${muteDelay / 60000} min, Unmute in ${unmuteDelay / 60000} min")
 }
+
+fun cancelUnmuteAlarm(scheduleId: Long, context: Context) {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+    val intent = Intent(context, UnmuteReceiver::class.java).apply {
+        putExtra(SCHEDULE_ID, scheduleId)
+    }
+
+    val pendingIntent = PendingIntent.getBroadcast(
+        context,
+        scheduleId.toInt(), // same requestCode used in scheduling
+        intent,
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
+
+    alarmManager.cancel(pendingIntent)
+}
+
 
 fun checkExactAlarmPermission(context: Context): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {

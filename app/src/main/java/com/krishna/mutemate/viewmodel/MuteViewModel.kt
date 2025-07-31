@@ -81,6 +81,7 @@ class MuteViewModel @Inject constructor(
         val endOrStart= if(!isEnd) "Starts" else "Ends"
         return when {
             timeRemaining >= 3600 -> "$endOrStart in ${timeRemaining / 3600}h ${timeRemaining % 3600 / 60}m".trimEnd()
+            timeRemaining >= 30*60 -> "$endOrStart in ${timeRemaining / 60}m"
             timeRemaining >= 120 -> "$endOrStart in ${timeRemaining / 60}m ${timeRemaining % 60}s"
             timeRemaining >= 60 -> "$endOrStart in 1m ${timeRemaining % 60}s"
             timeRemaining > 0 -> "$endOrStart in ${timeRemaining}s"
@@ -109,11 +110,14 @@ class MuteViewModel @Inject constructor(
     }
 
     fun remainingTimeFlow(targetTime: Date?) = flow {
-        var remaining = getTimeUntilStart(targetTime)
-        while (remaining > 0) {
-            emit(remaining)
-            delay(if(remaining > 30*60 ) 60_000 else 1_000) // delay for 1 min if time > 30 min
-            remaining = getTimeUntilStart(targetTime)
+        while (true) {
+            val remaining = getTimeUntilStart(targetTime) // in seconds
+            emit(remaining.coerceAtLeast(0))
+
+            if (remaining <= 0) break // stop when done
+
+            // If more than 30 min left, update every minute; otherwise every second
+            delay(if (remaining > 30 * 60) 60_000 else 1_000)
         }
     }
 }

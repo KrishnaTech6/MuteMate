@@ -31,8 +31,9 @@
                 android:resource="@xml/accessibility_service_config"/>
         </service>
         <receiver
-            android:name=".worker.UnmuteReceiver"
+            android:name=".broadcast_receiver.UnmuteReceiver"
             android:exported="true" />
+        <receiver android:name=".broadcast_receiver.CancelMuteReceiver"/>
 
         <provider
             android:name="androidx.startup.InitializationProvider"
