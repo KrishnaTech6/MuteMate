@@ -32,12 +32,16 @@ class MuteWorker @AssistedInject constructor(
                 muteHelper.dndModeOn()
                 "DND Mode schedule running."
             }
+            options.isMute -> {
+                muteHelper.muteMode()
+                "Mute Mode schedule running."
+            }
             options.isVibrate -> {
                 muteHelper.vibrateModePhone()
                 "Vibration Mode schedule running."
             }
             else -> {
-                muteHelper.mutePhone(
+                muteHelper.muteSpecific(
                     options.muteType.muteRingtone,
                     options.muteType.muteNotifications,
                     options.muteType.muteAlarm,

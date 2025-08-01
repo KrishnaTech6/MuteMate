@@ -5,7 +5,6 @@ import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
 import androidx.work.WorkManager
-import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.MuteSchedule
 import com.krishna.mutemate.room.MuteScheduleDao
 import com.krishna.mutemate.utils.MuteSettingsManager
@@ -70,7 +69,7 @@ class MuteMateAccessibilityService: AccessibilityService() {
                     val muteDelay = 0L
                     val unmuteDelay = muteSettingsManager.quickMuteDuration.first().toLong()*60*1000
                     val schedule = MuteSchedule(
-                        muteOptions = AllMuteOptions(options.isDnd, options.isVibrate, options.muteType),
+                        muteOptions = options,
                         startTime = Date(),
                         endTime = Date(System.currentTimeMillis() + unmuteDelay),
                     )

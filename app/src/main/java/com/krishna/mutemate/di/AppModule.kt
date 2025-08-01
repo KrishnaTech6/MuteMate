@@ -24,7 +24,7 @@ object AppModule {
             app.applicationContext,
             AppDatabase::class.java,
             "mute_schedule_db"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

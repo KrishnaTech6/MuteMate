@@ -46,146 +46,185 @@ fun MuteOptionsDropDown(
     context: Context = LocalContext.current,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier
-        .border(1.dp, Color.Black.copy(0.3f), RoundedCornerShape(16.dp))
+    Surface(
+        modifier = modifier
+            .border(1.dp, Color.Black.copy(0.3f), RoundedCornerShape(16.dp))
     ) {
         val muteSettingsManager = remember { MuteSettingsManager(context) }
         val coroutineScope = rememberCoroutineScope()
-        val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
-        val titles = listOf("DND Mode", "Vibration Mode", "Custom Mode")
+        val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isMute = true))
+        val titles = listOf("DND Mode", "Mute Mode", "Vibration Mode", "Custom Mode")
         // State for expand/collapse
         var soundProfileExpanded by remember { mutableStateOf(false) }
         val soundCustomizationExpanded = remember { mutableStateOf(false) }
 
-        val title = when{
+        val title = when {
             options.isDnd -> titles[0]
-            options.isVibrate -> titles[1]
+            options.isMute -> titles[1]
+            options.isVibrate -> titles[2]
             else -> {
                 val type = options.muteType
-                if(type.muteAlarm || type.muteRingtone || type.muteMedia || type.muteNotifications){
-                    titles[2]
-                }else "Select a mode"
+                if (type.muteAlarm || type.muteRingtone || type.muteMedia || type.muteNotifications) {
+                    titles[3]
+                } else "Select a mode"
             }
         }
 
-            // Sound Profile Settings Dropdown
-            ExpandableCard(
-                title = title!!,
-                expanded = soundProfileExpanded,
-                onExpandChanged = { soundProfileExpanded = it },
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                RowWithSwitch(
-                    title = "DND Mode",
-                    checked = options.isDnd,
-                    onCheckedChange = {
-                        coroutineScope.launch {
-                            muteSettingsManager.saveAllSettings(options.copy(isDnd = it))
-                        }
-                        if(it){
-                            soundProfileExpanded = false
-                        }
-
-                    }
-                )
-                RowWithSwitch(
-                    title = "Vibration Mode",
-                    checked = options.isVibrate,
-                    enabled = !options.isDnd,
-                    onCheckedChange = {
-                        coroutineScope.launch {
-                            muteSettingsManager.saveAllSettings(options.copy(isVibrate = it))
-                        }
-
-                        if(it){
-                            soundProfileExpanded = false
-                        }
-                    }
-                )
-
-                Divider(modifier = Modifier.padding(vertical = 4.dp))
-
-                // Sound Customization Dropdown
-                ExpandableCard(
-                    title = "Sound Customization",
-                    expanded = soundCustomizationExpanded.value,
-                    onExpandChanged = { soundCustomizationExpanded.value = it },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                ) {
-                    if (options.isDnd || options.isVibrate) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                                    RoundedCornerShape(6.dp)
+        // Sound Profile Settings Dropdown
+        ExpandableCard(
+            title = title,
+            expanded = soundProfileExpanded,
+            onExpandChanged = { soundProfileExpanded = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            RowWithSwitch(
+                title = "DND Mode",
+                checked = options.isDnd,
+                onCheckedChange = {
+                    coroutineScope.launch {
+                        muteSettingsManager.saveAllSettings(options.copy(isDnd = it))
+                        if (it) {
+                            muteSettingsManager.saveAllSettings(
+                                options.copy(
+                                    isMute = false,
+                                    isVibrate = false
                                 )
-                                .padding(4.dp)
-                        ) {
-                            Text(
-                                text = if (options.isDnd) "DND mode active - settings disabled"
-                                else "Vibration mode active - settings disabled",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-
-                    SoundToggle(
-                        title = "Ringtone",
-                        isChecked = options.muteType.muteRingtone,
-                        enabled = !options.isDnd && !options.isVibrate
-                    ) { isChecked ->
-                        coroutineScope.launch {
-                            muteSettingsManager.saveSetting(
-                                MuteSettingsManager.MUTE_RINGTONE_KEY,
-                                isChecked
-                            )
-                        }
-                    }
-
-                    SoundToggle(
-                        title = "Notifications",
-                        isChecked = options.muteType.muteNotifications,
-                        enabled = !options.isDnd && !options.isVibrate
-                    ) { isChecked ->
-                        coroutineScope.launch {
-                            muteSettingsManager.saveSetting(
-                                MuteSettingsManager.MUTE_NOTIFICATIONS_KEY,
-                                isChecked
-                            )
-                        }
-                    }
-
-                    SoundToggle(
-                        title = "Alarms",
-                        isChecked = options.muteType.muteAlarm,
-                        enabled = !options.isDnd && !options.isVibrate
-                    ) { isChecked ->
-                        coroutineScope.launch {
-                            muteSettingsManager.saveSetting(
-                                MuteSettingsManager.MUTE_ALARM_KEY,
-                                isChecked
-                            )
-                        }
-                    }
-
-                    SoundToggle(
-                        title = "Media",
-                        isChecked = options.muteType.muteMedia,
-                        enabled = !options.isDnd && !options.isVibrate
-                    ) { isChecked ->
-                        coroutineScope.launch {
-                            muteSettingsManager.saveSetting(
-                                MuteSettingsManager.MUTE_MEDIA_KEY,
-                                isChecked
                             )
                         }
                     }
                 }
+            )
+            RowWithSwitch(
+                title = "Mute Mode",
+                checked = options.isMute,
+                onCheckedChange = {
+                    coroutineScope.launch {
+                        muteSettingsManager.saveAllSettings(options.copy(isMute = it))
+                        if (it) {
+                            muteSettingsManager.saveAllSettings(
+                                options.copy(
+                                    isDnd = false,
+                                    isVibrate = false
+                                )
+                            )
+                        }
+                    }
+                }
+            )
+            RowWithSwitch(
+                title = "Vibration Mode",
+                checked = options.isVibrate,
+                onCheckedChange = {
+                    coroutineScope.launch {
+                        muteSettingsManager.saveAllSettings(options.copy(isVibrate = it))
+                        if (it) {
+                            muteSettingsManager.saveAllSettings(
+                                options.copy(
+                                    isMute = false,
+                                    isDnd = false
+                                )
+                            )
+                        }
+                    }
+                }
+            )
+
+            Divider(modifier = Modifier.padding(vertical = 4.dp))
+
+            // Sound Customization Dropdown
+            ExpandableCard(
+                title = "Sound Customization",
+                expanded = soundCustomizationExpanded.value,
+                onExpandChanged = { soundCustomizationExpanded.value = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+            ) {
+                val isDisabled = options.isDnd || options.isMute || options.isVibrate
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            if(isDisabled) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+                            else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.5f),
+                            RoundedCornerShape(6.dp)
+                        )
+                        .padding(4.dp)
+                ) {
+                    if (isDisabled) {
+                        Text(
+                            text = if (options.isDnd) "DND mode active - settings disabled"
+                            else if (options.isMute) "Mute mode active - settings disabled"
+                            else "Vibration mode active - settings disabled",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    } else {
+                        Text(
+                            text = "Choose one or more.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+
+                SoundToggle(
+                    title = "Ringtone",
+                    isChecked = options.muteType.muteRingtone,
+                    enabled = !options.isDnd && !options.isVibrate && !options.isMute
+                ) { isChecked ->
+                    coroutineScope.launch {
+                        muteSettingsManager.saveSetting(
+                            MuteSettingsManager.MUTE_RINGTONE_KEY,
+                            isChecked
+                        )
+                    }
+                }
+
+                SoundToggle(
+                    title = "Notifications",
+                    isChecked = options.muteType.muteNotifications,
+                    enabled = !options.isDnd && !options.isVibrate && !options.isMute
+                ) { isChecked ->
+                    coroutineScope.launch {
+                        muteSettingsManager.saveSetting(
+                            MuteSettingsManager.MUTE_NOTIFICATIONS_KEY,
+                            isChecked
+                        )
+                    }
+                }
+
+                SoundToggle(
+                    title = "Alarms",
+                    isChecked = options.muteType.muteAlarm,
+                    enabled = !options.isDnd && !options.isVibrate && !options.isMute
+                ) { isChecked ->
+                    coroutineScope.launch {
+                        muteSettingsManager.saveSetting(
+                            MuteSettingsManager.MUTE_ALARM_KEY,
+                            isChecked
+                        )
+                    }
+                }
+
+                SoundToggle(
+                    title = "Media",
+                    isChecked = options.muteType.muteMedia,
+                    enabled = !options.isDnd && !options.isVibrate && !options.isMute
+                ) { isChecked ->
+                    coroutineScope.launch {
+                        muteSettingsManager.saveSetting(
+                            MuteSettingsManager.MUTE_MEDIA_KEY,
+                            isChecked
+                        )
+                    }
+                }
             }
+        }
     }
 }
 
@@ -231,7 +270,13 @@ fun ExpandableCard(
 }
 
 @Composable
-fun RowWithSwitch(title: String, checked: Boolean, enabled: Boolean = true, modifier: Modifier = Modifier , onCheckedChange: (Boolean) -> Unit) {
+fun RowWithSwitch(
+    title: String,
+    checked: Boolean,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -254,7 +299,12 @@ fun RowWithSwitch(title: String, checked: Boolean, enabled: Boolean = true, modi
 }
 
 @Composable
-fun SoundToggle(title: String, isChecked: Boolean, enabled: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun SoundToggle(
+    title: String,
+    isChecked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

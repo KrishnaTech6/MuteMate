@@ -59,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -106,7 +107,7 @@ fun MuteScreen(
     val selectedDuration = remember { mutableIntStateOf(0) }
     var customTimeSelected by remember { mutableStateOf(false) }
     val muteSettingsManager = remember { MuteSettingsManager(context) }
-    val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
+    val options by muteSettingsManager.allMuteOptions.collectAsState(AllMuteOptions(isMute = true))
     val showDialog = remember { mutableStateOf(false) }
     val showExactAlarmDialog = remember { mutableStateOf(checkExactAlarmPermission(context)) }
     // need to ask permissions after api 31
@@ -164,6 +165,7 @@ fun MuteScreen(
                 endTime = endTime,
                 isDnd = options.isDnd,
                 isVibrationMode = options.isVibrate,
+                isMuteMode = options.isMute,
                 onScheduleAdd = { schedule ->
                     viewModel.addSchedule(schedule)
                     showToast("Schedule added")
@@ -434,6 +436,7 @@ private fun CustomTimeSelector(
         }
     }
 }
+data class IconMode(val mode: String, val icon: ImageVector )
 
 @Composable
 private fun ScheduleButton(
@@ -444,11 +447,12 @@ private fun ScheduleButton(
     endTime: Date?,
     isDnd: Boolean,
     isVibrationMode: Boolean,
+    isMuteMode: Boolean,
     onScheduleAdd: (MuteSchedule) -> Unit,
     onShowDialog: () -> Unit,
     onShowToast: (String) -> Unit,
 ) {
-    val muteOptions by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
+    val muteOptions by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isMute = true))
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -496,45 +500,35 @@ private fun ScheduleButton(
                 )
             }
 
+            val list = listOf(
+                isDnd to IconMode(mode= "DND", icon = Icons.Default.DoNotDisturb),
+                isVibrationMode to IconMode(mode= "Mute", icon = Icons.Default.NotificationsOff),
+                isMuteMode to IconMode(mode= "Vibration", icon = Icons.Default.Vibration)
+            )
+
             // Settings Summary
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // DND Setting
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DoNotDisturb,
-                        contentDescription = "DND",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = if (isDnd) "DND On" else "DND Off",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                }
 
-                // Vibration Setting
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Vibration,
-                        contentDescription = "Vibration",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
-                    Text(
-                        text = if (isVibrationMode) "Vibrate On" else "Vibrate Off",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                    )
+                list.forEach { option ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = option.second.icon,
+                            contentDescription = option.second.mode,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = if (option.first) "${option.second.mode} On" else "${option.second.mode} Off",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
 
@@ -542,7 +536,7 @@ private fun ScheduleButton(
             Button(
                 onClick = {
                     when {
-                        !hasNotificationPolicyAccess(context) -> onShowDialog()
+                        muteOptions.isDnd && !hasNotificationPolicyAccess(context) -> onShowDialog()
                         (selectedDuration == 0 && !customTimeSelected) -> onShowToast("Please select duration")
                         ((endTime == null || startTime == null) && customTimeSelected) -> onShowToast("Please select start and end time")
                         !muteOptions.isValid() -> onShowToast("Please select at least one mute mode")
@@ -561,7 +555,7 @@ private fun ScheduleButton(
                                 MuteSchedule(
                                     startTime = finalStartTime,
                                     endTime = finalEndTime,
-                                    muteOptions = AllMuteOptions(isDnd, isVibrationMode)
+                                    muteOptions = AllMuteOptions(isDnd, isVibrationMode, isMuteMode)
                                 )
                             )
                         }
@@ -661,7 +655,7 @@ fun MuteOptionButtons(
                             }
 
                             "Mute" -> {
-                                muteHelper.mutePhone(true, true, true, true)
+                                muteHelper.muteMode()
                             }
 
                             "Vibrate" -> {

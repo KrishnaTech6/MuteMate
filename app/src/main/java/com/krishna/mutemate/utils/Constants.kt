@@ -3,8 +3,6 @@ package com.krishna.mutemate.utils
 const val SCHEDULE = "schedule"
 const val SCHEDULE_ID = "schedule_id"
 const val DELAY = "delay"
-const val IS_DND = "isDnd"
-const val IS_VIBRATE = "isVibrate"
 
 
 

@@ -12,6 +12,10 @@ class MuteHelper(private val context: Context) {
         audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
     }
 
+    fun muteMode(){
+        muteSpecific(true, true , false, false)
+    }
+
     fun normalMode() {
         audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
     }
@@ -21,7 +25,7 @@ class MuteHelper(private val context: Context) {
         audioManager.ringerMode = AudioManager.RINGER_MODE_VIBRATE
     }
 
-    fun mutePhone(
+    fun muteSpecific(
         muteRingtone: Boolean,
         muteNotifications: Boolean,
         muteAlarms: Boolean,

@@ -7,7 +7,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.graphics.Canvas
-import android.os.BatteryManager
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast

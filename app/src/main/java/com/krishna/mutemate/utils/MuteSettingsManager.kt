@@ -18,8 +18,9 @@ private val Context.dataStore by preferencesDataStore("mute_settings")
 class MuteSettingsManager(private val context: Context) {
 
     companion object {
-         val IS_DND_KEY = booleanPreferencesKey(IS_DND)
-         val IS_VIBRATE_KEY = booleanPreferencesKey(IS_VIBRATE)
+         val IS_DND_KEY = booleanPreferencesKey("isDnd")
+         val IS_MUTE_KEY = booleanPreferencesKey("isMute")
+         val IS_VIBRATE_KEY = booleanPreferencesKey("isVibrate")
          val MUTE_RINGTONE_KEY = booleanPreferencesKey("mute_ringtone")
          val MUTE_NOTIFICATIONS_KEY = booleanPreferencesKey("mute_notifications")
          val MUTE_ALARM_KEY = booleanPreferencesKey("mute_alarms")
@@ -38,6 +39,7 @@ class MuteSettingsManager(private val context: Context) {
         AllMuteOptions(
             isDnd = prefs[IS_DND_KEY] ?: true,
             isVibrate = prefs[IS_VIBRATE_KEY] ?: false,
+            isMute = prefs[IS_MUTE_KEY] ?: false,
             muteType = SetMuteType(
                 muteMedia = prefs[MUTE_MEDIA_KEY] ?: false,
                 muteRingtone = prefs[MUTE_RINGTONE_KEY] ?: false,
@@ -55,6 +57,7 @@ class MuteSettingsManager(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs[IS_DND_KEY] = options.isDnd
             prefs[IS_VIBRATE_KEY] = options.isVibrate
+            prefs[IS_MUTE_KEY] = options.isMute
             prefs[MUTE_MEDIA_KEY] = options.muteType.muteMedia
             prefs[MUTE_RINGTONE_KEY] = options.muteType.muteRingtone
             prefs[MUTE_ALARM_KEY] = options.muteType.muteAlarm

@@ -26,10 +26,13 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             locationMute?.let {
                 if (it.muteOptions.isDnd) {
                     MuteHelper(context).dndModeOn()
+                }
+                else if(it.muteOptions.isMute){
+                    MuteHelper(context).muteMode()
                 } else if (it.muteOptions.isVibrate) {
                     MuteHelper(context).vibrateModePhone()
                 } else {
-                    MuteHelper(context).mutePhone(
+                    MuteHelper(context).muteSpecific(
                         it.muteOptions.muteType.muteRingtone,
                         it.muteOptions.muteType.muteNotifications,
                         it.muteOptions.muteType.muteAlarm,
