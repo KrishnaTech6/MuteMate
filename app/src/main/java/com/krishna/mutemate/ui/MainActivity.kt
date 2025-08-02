@@ -9,6 +9,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -103,19 +108,24 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination?.route
-        val selectedDestination =
-            Destination.entries.indexOfFirst { it.route == currentDestination }.coerceAtLeast(0)
         val viewModel = hiltViewModel<MuteViewModel>()
+        val isBottomBarVisible = currentDestination in Destination.entries.map { it.route }
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
-                    title = { TopAppBarTitle(navController, selectedDestination) },
+                    title = { TopAppBarTitle(navController, currentDestination) },
                 )
             },
             bottomBar = {
-                BottomNavigationBar(navController, selectedDestination)
+                AnimatedVisibility(
+                    visible = isBottomBarVisible,
+                    enter = slideInVertically(initialOffsetY = { fullHeight -> fullHeight }) + fadeIn(),
+                    exit = slideOutVertically(targetOffsetY = { fullHeight -> fullHeight }) + fadeOut()
+                ){
+                    BottomNavigationBar(navController, currentDestination)
+                }
             }
         ) { padding ->
             NavHostApp(

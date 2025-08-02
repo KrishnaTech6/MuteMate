@@ -167,21 +167,24 @@ fun openWebLink(context: Context, url: String){
     context.startActivity(intent)
 }
 
-fun sendEmailIntent(context: Context, email: String= "kris672dev@gmail.com", subject: String="MuteMate Feedback") {
+fun sendEmailIntent(
+    context: Context,
+    email: String = "kris672dev@gmail.com",
+    subject: String = "MuteMate Feedback"
+) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "message/rfc822"
         putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
         putExtra(Intent.EXTRA_SUBJECT, subject)
+        setPackage("com.google.android.gm")
     }
-
     try {
-        context.startActivity(
-            Intent.createChooser(intent, "Send email with")
-        )
+        context.startActivity(intent)
     } catch (e: ActivityNotFoundException) {
-        Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Gmail app not found", Toast.LENGTH_SHORT).show()
     }
 }
+
 
 
 fun shareApp(context: Context) {

@@ -35,7 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.krishna.mutemate.utils.ABOUT_APP
+import com.krishna.mutemate.ui.Destination
 import com.krishna.mutemate.utils.HOW_TO_USE
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.PRIVACY_POLICY
@@ -110,7 +110,7 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
             SettingsItem(
                 icon = Icons.Default.Info,
                 title = "About App",
-                onClick = { openWebLink(context, ABOUT_APP)}
+                onClick = { navController.navigate(Destination.AboutApp.route) }
             )
             SettingsItem(
                 icon = Icons.Default.StarRate,

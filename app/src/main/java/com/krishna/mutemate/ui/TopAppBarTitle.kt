@@ -26,9 +26,9 @@ import androidx.navigation.NavHostController
 import com.krishna.mutemate.R
 
 @Composable
-fun TopAppBarTitle(navController: NavHostController, selectedDestination: Int) {
-    when(selectedDestination){
-        Destination.HOME.ordinal -> {
+fun TopAppBarTitle(navController: NavHostController, currentDestination: String?) {
+    when(currentDestination){
+        Destination.Home.route -> {
             Row(verticalAlignment = Alignment.CenterVertically){
                 Image(painter = painterResource(R.drawable.mute_mate),null,
                     Modifier
@@ -43,15 +43,18 @@ fun TopAppBarTitle(navController: NavHostController, selectedDestination: Int) {
                 }
             }
         }
-        Destination.LIST.ordinal -> {
+        Destination.List.route -> {
             TopTitle(navController, "Schedule List")
         }
 
-        Destination.MAP.ordinal ->{
+        Destination.Map.route ->{
             TopTitle(navController,"Select Location to Mute")
         }
-        Destination.SETTINGS.ordinal ->{
+        Destination.Settings.route ->{
             TopTitle(navController,"Settings")
+        }
+        Destination.AboutApp.route ->{
+            TopTitle(navController,"About App")
         }
     }
 }

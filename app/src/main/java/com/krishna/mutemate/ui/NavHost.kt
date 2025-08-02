@@ -7,6 +7,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.krishna.mutemate.ui.screens.AboutAppScreen
 import com.krishna.mutemate.ui.screens.MapScreen
 import com.krishna.mutemate.ui.screens.MuteScreen
 import com.krishna.mutemate.ui.screens.ScheduleListScreen
@@ -24,28 +25,33 @@ fun NavHostApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Destination.HOME.route
+        startDestination = Destination.Home.route
     ) {
         Destination.entries.forEach { destination ->
             composable(destination.route) {
                 when (destination) {
-                    Destination.HOME -> MuteScreen(
+                    Destination.Home -> MuteScreen(
                         navController = navController,
                         viewModel = viewModel,
                         snackbarHostState = snackbarHostState,
                         coroutineScope = coroutineScope,
                         modifier = modifier,
                     )
-                    Destination.LIST -> ScheduleListScreen(
+                    Destination.List -> ScheduleListScreen(
                         viewModel = viewModel,
                         snackbarHostState = snackbarHostState,
                         coroutineScope = coroutineScope,
                         modifier = modifier
                     )
-                    Destination.MAP -> MapScreen(modifier = modifier)
-                    Destination.SETTINGS -> SettingsScreen(navController= navController, modifier = modifier)
+                    Destination.Map -> MapScreen(modifier = modifier)
+                    Destination.Settings -> SettingsScreen(navController= navController, modifier = modifier)
+                    else ->{}
                 }
             }
         }
+        composable(Destination.AboutApp.route) {
+            AboutAppScreen(navController = navController, modifier = modifier)
+        }
     }
 }
+

@@ -9,11 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController, selectedDestination: Int) {
+fun BottomNavigationBar(navController: NavHostController, currentRoute: String?) {
     NavigationBar(windowInsets = NavigationBarDefaults.windowInsets){
-        Destination.entries.forEachIndexed { index, destination ->
+        Destination.entries.forEach { destination ->
             NavigationBarItem(
-                selected = selectedDestination == index,
+                selected = currentRoute == destination.route,
                 onClick = {
                     navController.navigate(route = destination.route){
                         popUpTo(navController.graph.startDestinationId) {
@@ -23,7 +23,10 @@ fun BottomNavigationBar(navController: NavHostController, selectedDestination: I
                         restoreState = true
                     }
                 },
-                icon = { Icon(destination.icon, contentDescription = destination.contentDescription) },
+                icon = {
+                    destination.icon?.let {
+                        Icon(it, contentDescription = destination.contentDescription)
+                    } },
                 label = { Text(destination.label) },
             )
         }
