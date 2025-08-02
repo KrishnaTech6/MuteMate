@@ -23,8 +23,8 @@ android {
         applicationId = "com.krishna.mutemate"
         minSdk = 24
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.1.2"
+        versionCode = 8
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -99,6 +100,7 @@ fun MuteOptionsDropDown(
             RowWithSwitch(
                 title = "Mute Mode",
                 checked = options.isMute,
+                description = "Use DND for reliable mute — may vibrate on some phones.",
                 onCheckedChange = {
                     coroutineScope.launch {
                         muteSettingsManager.saveAllSettings(options.copy(isMute = it))
@@ -272,6 +274,7 @@ fun ExpandableCard(
 @Composable
 fun RowWithSwitch(
     title: String,
+    description: String? = null,
     checked: Boolean,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
@@ -284,12 +287,31 @@ fun RowWithSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
+        Column(Modifier.weight(1f)){
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+            description?.let {
+                if(checked) {
+                    Spacer(Modifier.height(2.dp))
+                    Box(
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f))
+                            .padding(2.dp)
+                    ) {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.width(8.dp))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,

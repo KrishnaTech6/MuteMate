@@ -61,9 +61,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -208,9 +211,14 @@ fun ShowExactAlarmAlert(showDialog: MutableState<Boolean>, context: Context) {
         title = { Text("Allow Exact Alarms") },
         text = {
             Text(
-                "This app needs permission to set alarms that go off exactly on time, " +
-                        "even when your phone is in Do Not Disturb mode or idle. " +
-                        "Without this permission, scheduled unmute may be delayed.",
+                buildAnnotatedString {
+                    append("Grant permission so ")
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("Scheduled Unmute")
+                    }
+                    append(" works on time — even in Do Not Disturb or idle mode. " +
+                            "Without it, unmute may be delayed.")
+                },
                 textAlign = TextAlign.Justify
             )
         },

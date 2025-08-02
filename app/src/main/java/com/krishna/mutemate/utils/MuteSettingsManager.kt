@@ -37,9 +37,9 @@ class MuteSettingsManager(private val context: Context) {
 
     val allMuteOptions: Flow<AllMuteOptions> =context.dataStore.data.map { prefs ->
         AllMuteOptions(
-            isDnd = prefs[IS_DND_KEY] ?: true,
+            isDnd = prefs[IS_DND_KEY] ?: false,
             isVibrate = prefs[IS_VIBRATE_KEY] ?: false,
-            isMute = prefs[IS_MUTE_KEY] ?: false,
+            isMute = prefs[IS_MUTE_KEY] ?: true,
             muteType = SetMuteType(
                 muteMedia = prefs[MUTE_MEDIA_KEY] ?: false,
                 muteRingtone = prefs[MUTE_RINGTONE_KEY] ?: false,

@@ -32,7 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.krishna.mutemate.utils.AccessibilityUtils
 import com.krishna.mutemate.utils.MuteSettingsManager
@@ -202,8 +205,14 @@ fun QuickMuteGesture(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        "We do NOT collect, store, or share any personal or sensitive data. " +
-                                "All actions happen entirely on your device.",
+                        buildAnnotatedString {
+                            append("We ")
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)){
+                                append("do NOT collect, store, or share")
+                            }
+                            append(" any personal or sensitive data. " +
+                                    "All actions happen entirely on your device.")
+                        },
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(12.dp))
