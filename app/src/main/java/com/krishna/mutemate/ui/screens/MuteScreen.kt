@@ -166,9 +166,6 @@ fun MuteScreen(
                 selectedDuration = selectedDuration.intValue,
                 startTime = startTime,
                 endTime = endTime,
-                isDnd = options.isDnd,
-                isVibrationMode = options.isVibrate,
-                isMuteMode = options.isMute,
                 onScheduleAdd = { schedule ->
                     viewModel.addSchedule(schedule)
                     showToast("Schedule added")
@@ -453,9 +450,6 @@ private fun ScheduleButton(
     selectedDuration: Int,
     startTime: Date?,
     endTime: Date?,
-    isDnd: Boolean,
-    isVibrationMode: Boolean,
-    isMuteMode: Boolean,
     onScheduleAdd: (MuteSchedule) -> Unit,
     onShowDialog: () -> Unit,
     onShowToast: (String) -> Unit,
@@ -509,9 +503,9 @@ private fun ScheduleButton(
             }
 
             val list = listOf(
-                isDnd to IconMode(mode= "DND", icon = Icons.Default.DoNotDisturb),
-                isVibrationMode to IconMode(mode= "Mute", icon = Icons.Default.NotificationsOff),
-                isMuteMode to IconMode(mode= "Vibration", icon = Icons.Default.Vibration)
+                muteOptions.isDnd to IconMode(mode= "DND", icon = Icons.Default.DoNotDisturb),
+                muteOptions.isMute to IconMode(mode= "Mute", icon = Icons.Default.Vibration),
+                muteOptions.isVibrate to IconMode(mode= "Vibration", icon = Icons.Default.NotificationsOff),
             )
 
             // Settings Summary
@@ -563,7 +557,7 @@ private fun ScheduleButton(
                                 MuteSchedule(
                                     startTime = finalStartTime,
                                     endTime = finalEndTime,
-                                    muteOptions = AllMuteOptions(isDnd, isVibrationMode, isMuteMode)
+                                    muteOptions = muteOptions
                                 )
                             )
                         }

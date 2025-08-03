@@ -117,6 +117,7 @@ fun SettingsScreen(navController: NavHostController, context: Context = LocalCon
                 title = "Rate Us",
                 onClick = { rateApp(context)}
             )
+            Spacer(Modifier.height(100.dp))
         }
     }
 }

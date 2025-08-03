@@ -72,12 +72,15 @@ fun AboutAppScreen(navController: NavHostController, modifier: Modifier) {
 
         // Description
         Text(
-            text = "MuteMate is your smart sound control companion. Whether you’re in a meeting, studying, attending a lecture, or simply need peace, MuteMate makes it effortless to silence your phone — instantly.\n" +
+            text = "MuteMate is your smart sound control companion. Whether you’re in a meeting, studying, attending a lecture, or simply need peace, " +
+                    "MuteMate makes it effortless to silence your phone — instantly.\n" +
                     "\n" +
                     "Triple Volume-Down = Instant Mute \nJust press the volume-down button three times from anywhere on your phone." +
-                    " No unlocking, no searching, no delay — your phone will instantly switch to Silent, Vibrate, or Do Not Disturb, depending on your pre-set choice.\n" +
+                    " No unlocking, no searching, no delay — your phone will instantly switch to Silent, Vibrate, or Do Not Disturb, " +
+                    "depending on your pre-set choice.\n" +
                     "\n" +
-                    "Set exact times for muting and unmuting automatically. Ideal for regular routines like classes, work hours, or bedtime.\n" +
+                    "Set exact times for muting and unmuting automatically. " +
+                    "Ideal for regular routines like classes, work hours, or bedtime.\n" +
                     "\n" +
                     "Clean, Simple UI\n" +
                     "Easy-to-use interface focused on functionality. No clutter, just fast control.\n" +
@@ -85,13 +88,6 @@ fun AboutAppScreen(navController: NavHostController, modifier: Modifier) {
                     "Battery-Friendly & Lightweight\n" +
                     "MuteMate runs efficiently without draining your phone’s battery.\n" +
                     "\n" +
-                    "Location-Based Muting " +
-                    "\n" +
-                    "We’re working on an exciting new feature! Soon, MuteMate will let you automatically mute your phone based on location.\n" +
-                    "- Choose a location on the map\n" +
-                    "- Select mute mode (Silent / Vibrate / DND)\n" +
-                    "- MuteMate will handle it automatically when you enter that zone\n" +
-                    "Perfect for office, school, home, or custom zones. (Stay tuned!)\n\n"+
                     "MuteMate works locally on your device. No personal data is collected or shared.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Justify,
