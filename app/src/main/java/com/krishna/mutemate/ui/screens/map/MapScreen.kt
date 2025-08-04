@@ -1,9 +1,10 @@
-package com.krishna.mutemate.ui.screens
+package com.krishna.mutemate.ui.screens.map
 
 import android.Manifest
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
@@ -43,6 +46,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -64,6 +72,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.krishna.mutemate.R
 import com.krishna.mutemate.model.AllMuteOptions
 import com.krishna.mutemate.model.LocationMute
+import com.krishna.mutemate.ui.components.LabelDescription
 import com.krishna.mutemate.ui.components.MuteOptionsDropDown
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils.getCurrentLocation
@@ -106,7 +115,11 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
 
     // Marker Options
-    val markerTypes = listOf("Home", "Office", "Other")
+    val markerTypes = listOf(
+        "Home" to R.drawable.ic_home,
+        "Office" to R.drawable.ic_office,
+        "Other" to R.drawable.ic_other,
+    )
 
     val searchQueryFlow = remember { MutableStateFlow("") }
 
@@ -218,7 +231,11 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                                 .clickable {
                                     Log.d("Prediction", prediction.toString())
                                     // Fetch details
-                                    fetchPlaceDetails(prediction.placeId, context, placesClient) { latLng ->
+                                    fetchPlaceDetails(
+                                        prediction.placeId,
+                                        context,
+                                        placesClient
+                                    ) { latLng ->
                                         scope.launch {
                                             markerPosition = latLng
                                             cameraPositionState.animate(
@@ -273,46 +290,76 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
         // Marker Type Dialog
         if (showMuteDialog && markerPosition != null) {
-            var radius = remember { mutableStateOf(500) }
+            var radius = remember { mutableStateOf(30f) }
             AlertDialog(
                 onDismissRequest = { showMuteDialog = false },
-                title = { Text("Mute at this Location?") },
+                title = {
+                    Column {
+                    Text(
+                        "Set Location Preferences",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Configure visibility radius, mute settings, and location type.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                } },
                 text = {
-                    Column(modifier = Modifier.fillMaxWidth().padding(4.dp).verticalScroll(
-                        rememberScrollState()
-                    )){
+                    Column(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .verticalScroll(
+                            rememberScrollState()
+                        )){
+                        LabelDescription(
+                            title = "Visibility Radius",
+                            description = "Set the radius within which the mute will be activated."
+                        )
+                        Spacer(Modifier.height(8.dp))
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(text = "Radius:")
                             Slider(
-                                value = radius.value.toFloat(),
-                                onValueChange = { radius.value = it.toInt() },
-                                valueRange = 100f..1000f,
-                                steps = 900,
-                                modifier = Modifier.padding(start = 8.dp).weight(1f)
+                                value = radius.value,
+                                onValueChange = { radius.value = it },
+                                valueRange = 10f..200f,
+                                steps = 16,
+                                modifier = Modifier.weight(1f)
                             )
+                            Spacer(Modifier.width(8.dp))
+                            Text("${radius.value.toInt()} m", style = MaterialTheme.typography.bodyMedium)
                         }
+                        Spacer(Modifier.height(16.dp))
+                        LabelDescription(title = "Select mute type")
+                        Spacer(Modifier.height(8.dp))
                         MuteOptionsDropDown()
+                        Spacer(Modifier.height(16.dp))
+
+                        /*** Location Type Section ***/
+                        LabelDescription(
+                            title = "Location Type",
+                            description = "Choose the type of location you want to set as a mute zone."
+                        )
+                        Spacer(Modifier.height(8.dp))
                         markerTypes.forEach { type ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        markerType = type
-                                    }
+                                    .clickable { markerType = type.first }
                                     .padding(vertical = 4.dp)
                             ) {
                                 RadioButton(
-                                    selected = markerType == type,
-                                    onClick = {
-                                        markerType = type
-                                    }
+                                    selected = markerType == type.first,
+                                    onClick = { markerType = type.first }
                                 )
-                                Text(type, Modifier.padding(start = 4.dp))
+                                Spacer(Modifier.width(8.dp))
+                                Image(painter = painterResource(type.second), contentDescription = type.first)
+                                Spacer(Modifier.width(8.dp))
+                                Text(type.first, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
@@ -327,7 +374,10 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                     TextButton(onClick = {
                         when {
                             !options.isValid() -> Toast.makeText(context, "Please choose a mute mode.", Toast.LENGTH_SHORT).show()
-                            !(backgroundLocationPermission.status.isGranted) -> showBackgroundLocationPermissionDialog = true
+                            !(backgroundLocationPermission.status.isGranted) -> {
+                                showBackgroundLocationPermissionDialog = true
+                                showMuteDialog = false
+                            }
                             markerType.isEmpty() ->  Toast.makeText(context, "Please choose a marker.", Toast.LENGTH_SHORT).show()
                             else -> {
                                 showMuteDialog = false
@@ -354,19 +404,35 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                     Text("Background Location Permission Required")
                 } ,
                 text ={
-                    Text("To automatically trigger MuteMate when you enter your chosen mute location," +
-                            " the app needs location access set to Allow all the time. " +
-                            "This allows MuteMate to work in the background " +
-                            "and detect when you’ve reached your set zone, even if the app isn’t open."
+                    Text(
+                        buildAnnotatedString {
+                            append("To automatically trigger MuteMate when you enter your chosen mute location," +
+                                    " the app needs location access set to ")
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)){ "Allow all the time. " }
+                            append("This allows MuteMate to work in the background " +
+                                    "and detect when you’ve reached your set zone, even if the app isn’t open.")
+                        }
                     )
                 } ,
                 onDismissRequest = {
-
+                    showMuteDialog= false
+                    showBackgroundLocationPermissionDialog = false
                 },
                 confirmButton = {
-
+                    TextButton(onClick = {
+                        showBackgroundLocationPermissionDialog = false
+                        backgroundLocationPermission.launchPermissionRequest()
+                    }){
+                        Text("Go to Settings")
+                    }
                 },
-                dismissButton ={}
+                dismissButton ={
+                    TextButton(onClick = {
+                        showBackgroundLocationPermissionDialog = false
+                    }){
+                        Text("Cancel")
+                    }
+                }
             )
         }
     }

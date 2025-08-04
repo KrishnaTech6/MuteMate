@@ -49,8 +49,13 @@ fun MuteOptionsDropDown(
 ) {
     Surface(
         modifier = modifier
-            .background(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainer)
-            .border(1.dp, Color.Black.copy(0.3f), RoundedCornerShape(16.dp))
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = Color.Black.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(16.dp)
+            ),
+        shape = RoundedCornerShape(16.dp),
     ) {
         val muteSettingsManager = remember { MuteSettingsManager(context) }
         val coroutineScope = rememberCoroutineScope()
@@ -80,7 +85,6 @@ fun MuteOptionsDropDown(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .background(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.onSurface)
         ) {
             RowWithSwitch(
                 title = "DND Mode",
