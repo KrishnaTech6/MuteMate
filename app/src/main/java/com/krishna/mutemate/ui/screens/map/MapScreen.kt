@@ -2,6 +2,7 @@ package com.krishna.mutemate.ui.screens.map
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -98,7 +99,11 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
 
     val locationPermission = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
-    val backgroundLocationPermission = rememberPermissionState(permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    val backgroundLocationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        rememberPermissionState(permission = Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    } else {
+        null
+    }
     var markerPosition by remember { mutableStateOf<LatLng?>( getCurrentLocation(context)) }
     var cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(markerPosition ?: LatLng(28.6139, 77.2090), 18f)
@@ -170,7 +175,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                             "Home" -> bitmapDescriptorFromVector(context, R.drawable.ic_home)
                             "Office" -> bitmapDescriptorFromVector(context, R.drawable.ic_office)
                             else -> bitmapDescriptorFromVector(context, R.drawable.ic_other)
-                        }
+                        },
                     )
                 }
             }
@@ -374,7 +379,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                     TextButton(onClick = {
                         when {
                             !options.isValid() -> Toast.makeText(context, "Please choose a mute mode.", Toast.LENGTH_SHORT).show()
-                            !(backgroundLocationPermission.status.isGranted) -> {
+                            (backgroundLocationPermission?.status?.isGranted != null && !backgroundLocationPermission.status.isGranted) -> {
                                 showBackgroundLocationPermissionDialog = true
                                 showMuteDialog = false
                             }
@@ -408,7 +413,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                         buildAnnotatedString {
                             append("To automatically trigger MuteMate when you enter your chosen mute location," +
                                     " the app needs location access set to ")
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)){ "Allow all the time. " }
+                            withStyle(SpanStyle(fontWeight = FontWeight.Bold)){ append("Allow all the time. ") }
                             append("This allows MuteMate to work in the background " +
                                     "and detect when you’ve reached your set zone, even if the app isn’t open.")
                         }
@@ -421,7 +426,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                 confirmButton = {
                     TextButton(onClick = {
                         showBackgroundLocationPermissionDialog = false
-                        backgroundLocationPermission.launchPermissionRequest()
+                        backgroundLocationPermission?.launchPermissionRequest()
                     }){
                         Text("Go to Settings")
                     }
