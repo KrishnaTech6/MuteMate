@@ -8,7 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.krishna.mutemate.ui.screens.AboutAppScreen
-import com.krishna.mutemate.ui.screens.MapScreen
+import com.krishna.mutemate.ui.screens.map.MapScreen
 import com.krishna.mutemate.ui.screens.MuteScreen
 import com.krishna.mutemate.ui.screens.ScheduleListScreen
 import com.krishna.mutemate.ui.screens.SettingsScreen

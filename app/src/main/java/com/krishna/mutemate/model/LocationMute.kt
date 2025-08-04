@@ -13,6 +13,6 @@ data class LocationMute(
     @DrawableRes
     val markerType: Int,
     val muteOptions: AllMuteOptions,
-    val radius: Int? = null,
+    val radius: Float? = null,
     val latLng: LatLng? = null,
 )
