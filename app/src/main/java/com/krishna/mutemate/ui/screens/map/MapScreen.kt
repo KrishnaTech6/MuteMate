@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,7 +46,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -59,12 +57,14 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.AutocompletePrediction
 import com.google.android.libraries.places.api.model.AutocompleteSessionToken
 import com.google.android.libraries.places.api.net.FindAutocompletePredictionsRequest
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.Marker
@@ -78,7 +78,6 @@ import com.krishna.mutemate.ui.components.MuteOptionsDropDown
 import com.krishna.mutemate.utils.MuteSettingsManager
 import com.krishna.mutemate.utils.SharedPrefUtils.getCurrentLocation
 import com.krishna.mutemate.utils.SharedPrefUtils.putCurrentLocation
-import com.krishna.mutemate.utils.bitmapDescriptorFromVector
 import com.krishna.mutemate.utils.fetchPlaceDetails
 import com.krishna.mutemate.viewmodel.MapViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,7 +93,7 @@ import kotlinx.coroutines.launch
 fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var isLoading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
     val options by MuteSettingsManager(context).allMuteOptions.collectAsState(AllMuteOptions(isDnd = true))
 
 
@@ -117,13 +116,13 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
     val token = remember { AutocompleteSessionToken.newInstance() }
 
     var showBackgroundLocationPermissionDialog by remember { mutableStateOf(false) }
-
-
     // Marker Options
     val markerTypes = listOf(
-        "Home" to R.drawable.ic_home,
-        "Office" to R.drawable.ic_office,
-        "Other" to R.drawable.ic_other,
+        "Home" ,
+        "Office",
+        "Market",
+        "Meeting",
+        "Other",
     )
 
     val searchQueryFlow = remember { MutableStateFlow("") }
@@ -164,18 +163,29 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
             onMapClick = { latLng ->
                 showMuteDialog = true
                 markerPosition = latLng
-            }
+            },
+            onMapLoaded = { isLoading = false }
         ) {
             if(muteList.isNotEmpty()){
                 muteList.forEach { mute ->
                     Marker(
                         state = MarkerState(position = mute.latLng!!),
                         title = mute.title,
-                        icon = when(mute.title){
-                            "Home" -> bitmapDescriptorFromVector(context, R.drawable.ic_home)
-                            "Office" -> bitmapDescriptorFromVector(context, R.drawable.ic_office)
-                            else -> bitmapDescriptorFromVector(context, R.drawable.ic_other)
-                        },
+                        icon = when(mute.title) {
+                            markerTypes[0] -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                            markerTypes[1] -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)
+                            markerTypes[2] -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
+                            markerTypes[3] -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+                            markerTypes[4] -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)
+                            else -> BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
+                        }
+                    )
+                    Circle(
+                        center = mute.latLng,
+                        fillColor = Color.Blue.copy(alpha = 0.2f),
+                        radius = mute.radius?.toDouble() ?: 10.0,
+                        strokeColor = Color.Blue,
+                        strokeWidth = 2f
                     )
                 }
             }
@@ -295,7 +305,7 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
 
         // Marker Type Dialog
         if (showMuteDialog && markerPosition != null) {
-            var radius = remember { mutableStateOf(30f) }
+            var radius = remember { mutableStateOf(5f) }
             AlertDialog(
                 onDismissRequest = { showMuteDialog = false },
                 title = {
@@ -330,8 +340,8 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                             Slider(
                                 value = radius.value,
                                 onValueChange = { radius.value = it },
-                                valueRange = 10f..200f,
-                                steps = 16,
+                                valueRange = 5f..50f,
+                                steps = 45,
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(Modifier.width(8.dp))
@@ -354,17 +364,15 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { markerType = type.first }
+                                    .clickable { markerType = type }
                                     .padding(vertical = 4.dp)
                             ) {
                                 RadioButton(
-                                    selected = markerType == type.first,
-                                    onClick = { markerType = type.first }
+                                    selected = markerType == type,
+                                    onClick = { markerType = type }
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Image(painter = painterResource(type.second), contentDescription = type.first)
-                                Spacer(Modifier.width(8.dp))
-                                Text(type.first, style = MaterialTheme.typography.bodyMedium)
+                                Text(type, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
@@ -441,5 +449,10 @@ fun MapScreen(modifier: Modifier = Modifier, viewmodel: MapViewModel = hiltViewM
             )
         }
     }
+}
+
+@Composable
+fun EditMarkerDialog(mute: LocationMute) {
+
 }
 
