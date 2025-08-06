@@ -8,10 +8,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.krishna.mutemate.ui.screens.AboutAppScreen
-import com.krishna.mutemate.ui.screens.map.MapScreen
+import com.krishna.mutemate.ui.screens.MuteListScreen
 import com.krishna.mutemate.ui.screens.MuteScreen
-import com.krishna.mutemate.ui.screens.ScheduleListScreen
 import com.krishna.mutemate.ui.screens.SettingsScreen
+import com.krishna.mutemate.ui.screens.map.MapScreen
+import com.krishna.mutemate.viewmodel.MapViewModel
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import kotlinx.coroutines.CoroutineScope
 
@@ -21,7 +22,8 @@ fun NavHostApp(
     snackbarHostState: SnackbarHostState,
     coroutineScope: CoroutineScope,
     modifier: Modifier = Modifier,
-    viewModel: MuteViewModel = hiltViewModel(),
+    muteViewModel: MuteViewModel = hiltViewModel(),
+    mapViewModel: MapViewModel = hiltViewModel(),
 ) {
     NavHost(
         navController = navController,
@@ -32,13 +34,14 @@ fun NavHostApp(
                 when (destination) {
                     Destination.Home -> MuteScreen(
                         navController = navController,
-                        viewModel = viewModel,
+                        viewModel = muteViewModel,
                         snackbarHostState = snackbarHostState,
                         coroutineScope = coroutineScope,
                         modifier = modifier,
                     )
-                    Destination.List -> ScheduleListScreen(
-                        viewModel = viewModel,
+                    Destination.List -> MuteListScreen(
+                        muteViewModel = muteViewModel,
+                        mapViewModel = mapViewModel,
                         snackbarHostState = snackbarHostState,
                         coroutineScope = coroutineScope,
                         modifier = modifier

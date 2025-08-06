@@ -44,7 +44,7 @@ fun TopAppBarTitle(navController: NavHostController, currentDestination: String?
             }
         }
         Destination.List.route -> {
-            TopTitle(navController, "Schedule List")
+            TopTitle(navController, "Mute List")
         }
 
         Destination.Map.route ->{

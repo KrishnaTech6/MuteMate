@@ -45,6 +45,7 @@ import com.krishna.mutemate.utils.NotificationHelper
 import com.krishna.mutemate.utils.SharedPrefUtils.getBoolean
 import com.krishna.mutemate.utils.SharedPrefUtils.saveBoolean
 import com.krishna.mutemate.utils.UpdateHelper
+import com.krishna.mutemate.viewmodel.MapViewModel
 import com.krishna.mutemate.viewmodel.MuteViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -108,7 +109,8 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination?.route
-        val viewModel = hiltViewModel<MuteViewModel>()
+        val muteViewModel = hiltViewModel<MuteViewModel>()
+        val mapViewModel = hiltViewModel<MapViewModel>()
         val isBottomBarVisible = currentDestination in Destination.entries.map { it.route }
 
         Scaffold(
@@ -133,7 +135,8 @@ class MainActivity : ComponentActivity() {
                 snackbarHostState,
                 coroutineScope,
                 Modifier.padding(padding),
-                viewModel
+                muteViewModel,
+                mapViewModel
             )
         }
     }
